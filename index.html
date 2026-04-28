@@ -1,893 +1,469 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>SceneForge — MidJourney Prompt Builder</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SceneForge Slim — Midjourney Prompt Builder</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.3.1/umd/react.production.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.3.1/umd/react-dom.production.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.5/babel.min.js"></script>
-  <style>body{margin:0;padding:0;background:#060810;}</style>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700&family=JetBrains+Mono:wght@400;500&family=Rajdhani:wght@400;500;600&display=swap');
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { background: #060810; color: #f0ece0; font-family: Rajdhani, sans-serif; }
+    .app {
+      min-height: 100vh;
+      background:
+        linear-gradient(rgba(0,229,255,.018) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0,229,255,.018) 1px, transparent 1px),
+        #060810;
+      background-size: 44px 44px;
+      padding-bottom: 230px;
+    }
+    .hdr {
+      padding: 1rem 1.25rem .8rem;
+      border-bottom: 1px solid #242840;
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      background: rgba(6,8,16,.96);
+      backdrop-filter: blur(10px);
+    }
+    .hdr:before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 2px;
+      background: linear-gradient(90deg, transparent, #00e5ff, #ffe040, transparent);
+    }
+    .logo {
+      font-family: Cinzel, serif;
+      color: #ffe040;
+      font-size: 1.15rem;
+      letter-spacing: .12em;
+      text-shadow: 0 0 18px rgba(255,224,64,.22);
+    }
+    .sub {
+      font-family: JetBrains Mono, monospace;
+      color: #00b8cc;
+      font-size: .48rem;
+      letter-spacing: .2em;
+      text-transform: uppercase;
+      margin-top: .2rem;
+    }
+    .sections { padding: 1rem 1.25rem; display: flex; flex-direction: column; gap: 1.1rem; max-width: 1120px; margin: 0 auto; }
+    .sec {
+      border-left: 1px solid #242840;
+      padding-left: .9rem;
+      position: relative;
+    }
+    .sec:before {
+      content: '';
+      position: absolute;
+      top: 0; left: -1px;
+      width: 1px; height: 24px;
+      background: #00e5ff;
+      box-shadow: 0 0 8px rgba(0,229,255,.35);
+    }
+    .sec-head { display: flex; align-items: center; gap: .55rem; margin-bottom: .7rem; }
+    .num { font-family: JetBrains Mono, monospace; color: #00e5ff; font-size: .52rem; min-width: 1.45rem; }
+    .title { font-family: Cinzel, serif; color: #ffe040; font-size: .62rem; letter-spacing: .18em; text-transform: uppercase; }
+    .line { flex: 1; height: 1px; background: linear-gradient(to right, #363c5a, transparent); }
+    .hint { font-family: JetBrains Mono, monospace; font-size: .55rem; line-height: 1.55; color: #5a5878; margin: -.25rem 0 .55rem; }
+    .label { font-family: JetBrains Mono, monospace; font-size: .5rem; letter-spacing: .12em; text-transform: uppercase; color: #a8a4c0; margin: .6rem 0 .3rem; }
+    .pills { display: flex; flex-wrap: wrap; gap: .32rem; }
+    button.pill {
+      padding: .32rem .65rem;
+      border: 1px solid #363c5a;
+      background: transparent;
+      color: #a8a4c0;
+      font-family: Rajdhani, sans-serif;
+      font-size: .82rem;
+      font-weight: 500;
+      border-radius: 3px;
+      cursor: pointer;
+      line-height: 1.25;
+      text-align: left;
+      transition: all .12s;
+    }
+    button.pill:hover { border-color: #ffe040; color: #ffe040; background: rgba(255,224,64,.08); }
+    button.pill.on { border-color: #ffe040; color: #ffe040; background: rgba(255,224,64,.18); box-shadow: 0 0 8px rgba(255,224,64,.16); }
+    .grid2 { display: grid; grid-template-columns: 1fr; gap: .65rem; }
+    @media(min-width: 850px) { .grid2 { grid-template-columns: 1fr 1fr; } }
+    select, textarea, input[type="text"] {
+      width: 100%;
+      background: #0f1120;
+      border: 1px solid #363c5a;
+      color: #f0ece0;
+      padding: .58rem .75rem;
+      font-family: Rajdhani, sans-serif;
+      font-size: .9rem;
+      border-radius: 3px;
+      outline: none;
+    }
+    textarea { min-height: 72px; resize: vertical; line-height: 1.5; }
+    select:focus, textarea:focus, input:focus { border-color: #ffe040; box-shadow: 0 0 0 1px rgba(255,224,64,.2); }
+    .preview {
+      margin-top: .55rem;
+      padding: .55rem .7rem;
+      background: #0f1120;
+      border: 1px solid #242840;
+      color: #00b8cc;
+      font-family: JetBrains Mono, monospace;
+      font-size: .58rem;
+      line-height: 1.55;
+      border-radius: 3px;
+      word-break: break-word;
+    }
+    .row { display: flex; align-items: center; justify-content: space-between; gap: 1rem; }
+    .slider { margin-top: .7rem; }
+    .slider-val { font-family: JetBrains Mono, monospace; color: #ffe040; font-size: .78rem; }
+    input[type="range"] { width: 100%; appearance: none; height: 2px; background: #363c5a; border-radius: 99px; cursor: pointer; }
+    input[type="range"]::-webkit-slider-thumb { appearance: none; width: 14px; height: 14px; border-radius: 50%; background: #ffe040; border: 2px solid #060810; box-shadow: 0 0 8px rgba(255,224,64,.35); }
+    .toggle-row { display: flex; flex-wrap: wrap; gap: .35rem; margin-top: .75rem; }
+    .bar {
+      position: fixed;
+      left: 0; right: 0; bottom: 0;
+      z-index: 20;
+      background: #080a16;
+      border-top: 1px solid #363c5a;
+      padding: .75rem 1.25rem .9rem;
+    }
+    .bar:before {
+      content: '';
+      position: absolute;
+      top: -1px; left: 0; right: 0;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, #00e5ff, #ffe040, transparent);
+    }
+    .bar-inner { max-width: 1120px; margin: 0 auto; }
+    .bar-lbl { font-family: JetBrains Mono, monospace; font-size: .48rem; letter-spacing: .22em; text-transform: uppercase; color: #00b8cc; margin-bottom: .35rem; }
+    .out {
+      background: #0f1120;
+      border: 1px solid #363c5a;
+      color: #d0c890;
+      padding: .6rem .75rem;
+      border-radius: 3px;
+      font-family: JetBrains Mono, monospace;
+      font-size: .61rem;
+      line-height: 1.55;
+      max-height: 82px;
+      overflow-y: auto;
+      word-break: break-word;
+      margin-bottom: .55rem;
+    }
+    .params { color: #00e5ff; }
+    .copy { width: 100%; padding: .7rem; border: none; border-radius: 3px; cursor: pointer; background: #ffe040; color: #060810; font-family: Cinzel, serif; letter-spacing: .18em; text-transform: uppercase; font-size: .72rem; font-weight: 700; }
+    .copy:disabled { background: #0f1120; color: #5a5878; border: 1px solid #242840; cursor: not-allowed; }
+    .copy.ok { background: #00e090; }
+    .small { color: #5a5878; font-size: .48rem; font-family: JetBrains Mono, monospace; margin-top: .28rem; line-height: 1.35; }
+  </style>
 </head>
 <body>
-<div id="root"></div>
-<script>const{useState,useMemo}=React;</script>
-<script type="text/babel">
+  <div id="root"></div>
+  <script>const { useMemo, useState } = React;</script>
+  <script type="text/babel">
 
-// ─── THEMES
-const THEMES={
-  cyber: {name:"Cyber Noir",dot1:"#ffe040",dot2:"#00e5ff",bg:"#060810",bgI:"#0f1120",bd:"#242840",bdH:"#363c5a",pb:"#080a16",pri:"#ffe040",priG:"rgba(255,224,64,0.22)",sec:"#00e5ff",secD:"#00b8cc",secG:"rgba(0,229,255,0.18)",tx:"#f0ece0",mu:"#a8a4c0",di:"#5a5878",pt:"#d0c890",gc:"rgba(0,229,255,0.018)",ah:"%23ffe040",hl:"linear-gradient(90deg,transparent,#00e5ff,#ffe040,transparent)",sa:"#00e5ff"},
-  waste: {name:"Wasteland",dot1:"#ff6a20",dot2:"#c89030",bg:"#0e0804",bgI:"#180f07",bd:"#3a2010",bdH:"#503018",pb:"#120a04",pri:"#ff6a20",priG:"rgba(255,106,32,0.22)",sec:"#c89030",secD:"#a07020",secG:"rgba(200,144,48,0.18)",tx:"#f0e4d0",mu:"#c0a080",di:"#604030",pt:"#d4b070",gc:"rgba(255,106,32,0.015)",ah:"%23ff6a20",hl:"linear-gradient(90deg,transparent,#c89030,#ff6a20,transparent)",sa:"#c89030"},
-  bio:   {name:"Biopunk",  dot1:"#00ff88",dot2:"#80ff40",bg:"#040c06",bgI:"#08130a",bd:"#0e2814",bdH:"#163c1e",pb:"#060e08",pri:"#00ff88",priG:"rgba(0,255,136,0.2)",sec:"#80ff40",secD:"#50cc20",secG:"rgba(128,255,64,0.15)",tx:"#e8f4e0",mu:"#88c098",di:"#305040",pt:"#a0d890",gc:"rgba(0,255,136,0.018)",ah:"%2300ff88",hl:"linear-gradient(90deg,transparent,#80ff40,#00ff88,transparent)",sa:"#80ff40"},
-  polar: {name:"Polar Void",dot1:"#90c8f8",dot2:"#dff0ff",bg:"#050810",bgI:"#090e1e",bd:"#182038",bdH:"#243050",pb:"#070a18",pri:"#90c8f8",priG:"rgba(144,200,248,0.2)",sec:"#dff0ff",secD:"#a8d4f0",secG:"rgba(223,240,255,0.15)",tx:"#eaf4ff",mu:"#8898b8",di:"#384460",pt:"#88b8d8",gc:"rgba(144,200,248,0.018)",ah:"%2390c8f8",hl:"linear-gradient(90deg,transparent,#a8d4f0,#dff0ff,transparent)",sa:"#a8d4f0"},
-  gothic:{name:"Gothic Ruin",dot1:"#e040a8",dot2:"#9040cc",bg:"#090508",bgI:"#140a14",bd:"#2a1428",bdH:"#3e1e3c",pb:"#0c0710",pri:"#e040a8",priG:"rgba(224,64,168,0.22)",sec:"#9040cc",secD:"#7030a8",secG:"rgba(144,64,204,0.18)",tx:"#f0e4f0",mu:"#c098c0",di:"#5e3860",pt:"#c898c8",gc:"rgba(224,64,168,0.015)",ah:"%23e040a8",hl:"linear-gradient(90deg,transparent,#9040cc,#e040a8,transparent)",sa:"#9040cc"},
-};
-
-
-
-
-// ─── AESTHETIC ENGINE — taste-profile presets from the reference images
-const VISUAL_RECIPES=[
-  {label:"Cinematic street portrait",v:"cinematic street portrait photography, emotionally charged environmental portrait, natural human viewpoint"},
-  {label:"Noir street photo",v:"noir photography, high contrast monochrome, deep dramatic shadows, film-noir street portrait"},
-  {label:"Graphic horror art",v:"dark graphic horror artwork, bold dramatic linework, stark shapes, unsettling illustrated atmosphere"},
-  {label:"Noir manga close-up",v:"noir manga style, close-up composition, expressive ink linework, elegant cinematic shadow design"},
-  {label:"Glitch editorial",v:"glitch art editorial portrait, digital corruption, pixel distortion, RGB channel separation, layered double exposure"},
-  {label:"1970s crime still",v:"raw 1970s crime thriller film still, gritty urban realism, desaturated cinematic color, heavy analog grain"},
-  {label:"1930s WPA poster",v:"vintage 1930s WPA Federal Art Project travel poster, screen print, woodblock print aesthetic, simplified geometric forms"},
-  {label:"Android industrial still",v:"quiet android portrait in damp industrial machinery, rusted mechanical backdrop, soft eerie stillness"},
-  {label:"Historical color photo",v:"authentic historical color photograph, period accurate clothing and props, documentary realism, aged film surface"},
-  {label:"Retro arcade horror",v:"retro arcade horror scene, glowing screens, dense visual information, chiaroscuro darkness, single vivid accent"},
+const RECIPES = [
+  { label: 'Cinematic portrait', v: 'cinematic environmental portrait photography, single clear subject, grounded realism', s: 175, raw: true },
+  { label: 'Noir portrait', v: 'black and white noir street portrait, high contrast shadows, luminous highlights, single clear subject', s: 125, raw: true },
+  { label: 'Glitch editorial', v: 'glitch art editorial portrait, controlled digital corruption, subtle RGB separation around the edges only, single clear subject, sharp face', s: 175, raw: true },
+  { label: 'Graphic horror', v: 'dark graphic horror artwork, bold ink linework, stark shapes, limited palette, dramatic shadow design', s: 450, raw: false },
+  { label: 'Noir manga', v: 'noir manga illustration, expressive ink linework, close-up cinematic composition, clean grayscale shadow design', s: 350, raw: false },
+  { label: '1970s crime still', v: 'raw 1970s crime thriller film still, gritty urban realism, analog grain, period detail, cinematic composition', s: 125, raw: true },
+  { label: '1930s WPA poster', v: 'vintage 1930s WPA Federal Art Project travel poster, screen print, flat color shapes, hard edges, simplified geometric forms, no photorealism', s: 250, raw: false },
+  { label: 'Historical photo', v: 'authentic historical color photograph, period accurate clothing and props, documentary realism, aged film surface', s: 100, raw: true },
+  { label: 'Android industrial', v: 'quiet android portrait in damp industrial machinery, soft eerie stillness, rusted mechanical backdrop, cinematic sci-fi realism', s: 220, raw: true },
+  { label: 'Clean environment', v: 'highly composed environment photograph, strong atmosphere, clear subject hierarchy, no clutter', s: 150, raw: true },
 ];
 
-const PALETTES=[
-  {label:"No palette control",v:""},
-  {label:"Red + grayscale",v:"dominant blood red, black, and grayscale palette, one vivid red accent against darkness"},
-  {label:"Black & white",v:"pure black and white palette, strong tonal contrast, no color"},
-  {label:"B&W + gold tint",v:"black and white with subtle warm gold tint, red lips as a restrained accent"},
-  {label:"Desaturated 1970s",v:"desaturated 1970s color palette, faded blues and browns, strong contrast, aged film tones"},
-  {label:"Golden hour amber",v:"warm orange-gold palette, glowing highlights, long amber shadows, nostalgic warmth"},
-  {label:"Cold industrial green-gray",v:"cold green-gray industrial palette, muted rust, damp metal, low saturation"},
-  {label:"Cobalt poster",v:"deep cobalt blue, cream white, pale blue-gray shadows, flat poster colors"},
-  {label:"Neon cyan/amber",v:"cyan shadows and amber highlights, electric color separation, cinematic neon tension"},
-  {label:"Muted earth documentary",v:"muted earth tones, dusty sunlight, faded documentary color, realistic skin tones"},
+const SUBJECTS = [
+  { label: 'No people', v: '' },
+  { label: 'Beautiful woman', v: 'a beautiful woman' },
+  { label: 'Lean athletic woman', v: 'a lean athletic woman' },
+  { label: 'Noir heroine', v: 'a mysterious noir heroine' },
+  { label: 'Fashion model', v: 'a high fashion editorial model' },
+  { label: 'Android girl', v: 'a quiet female android with humanlike features' },
+  { label: 'Two detectives', v: 'two hardened street detectives' },
+  { label: 'Custom', v: 'custom' },
 ];
 
-const ERAS=[
-  {label:"No era anchor",v:""},
-  {label:"1930s",v:"set in the 1930s, period accurate materials, clothing, vehicles, storefronts, and atmosphere"},
-  {label:"1950s noir",v:"1950s noir mood, vintage styling, mid-century urban atmosphere, old cinema elegance"},
-  {label:"1970s grit",v:"set in 1973, authentic 1970s urban details, gritty period texture, analog crime-film atmosphere"},
-  {label:"1980s arcade",v:"1980s arcade-era atmosphere, CRT glow, analog electronics, dense retro technology"},
-  {label:"1990s film",v:"1990s film look, imperfect color, soft contrast, nostalgic analog realism"},
-  {label:"Near future",v:"near-future setting, subtly advanced technology, plausible urban futurism, not overdesigned"},
-  {label:"Timeless contemporary",v:"timeless contemporary setting, current but not trendy, grounded real-world details"},
+const LOOKS = [
+  { label: 'No specific look', v: '' },
+  { label: 'White European, blonde hair', v: 'White European, blonde wavy hair worn loose' },
+  { label: 'Scandinavian, blonde bob', v: 'Scandinavian, blonde shoulder-length bob hair' },
+  { label: 'East Asian, long black hair', v: 'East Asian, long straight black hair' },
+  { label: 'Latina, dark wavy hair', v: 'Latina, dark thick wavy hair' },
+  { label: 'Black, natural hair', v: 'Black, natural textured hair' },
+  { label: 'Custom look in details', v: '' },
 ];
 
-const TEXTURE_ATMOS=[
-  {label:"Clean",v:"clean precise composition, controlled detail, no clutter"},
-  {label:"Film grain",v:"visible film grain, soft halation, imperfect analog surface"},
-  {label:"Grit / decay",v:"gritty textures, worn surfaces, rust, peeling paint, lived-in urban decay"},
-  {label:"Dense layered info",v:"dense layered information, visual overload, background packed with readable-feeling detail"},
-  {label:"Chiaroscuro",v:"dramatic chiaroscuro lighting, deep blacks, luminous highlights, sculpted shadow"},
-  {label:"Ink texture",v:"bold ink texture, hatching, scratchy linework, hand-drawn marks"},
-  {label:"Flat hard edges",v:"FLAT color shapes with HARD edges, NO gradients, NO photorealistic detail"},
-  {label:"Double exposure layer",v:"double exposure layering, city forms blended into the figure, transparent overlapping silhouettes"},
-  {label:"Damp mechanical",v:"dark wet machinery, rusted pipes, cables, oil stains, damp atmosphere"},
-  {label:"Aged print",v:"aged paper texture, print imperfections, faded ink, slight border wear"},
+const WARDROBE = [
+  { label: 'No specific clothing', v: '' },
+  { label: 'Black vintage outfit', v: 'wearing a black vintage outfit' },
+  { label: 'Luxury casual', v: 'wearing a luxury casual outfit' },
+  { label: 'High fashion editorial', v: 'wearing a high fashion editorial outfit' },
+  { label: '1970s period clothing', v: 'wearing authentic 1970s period clothing' },
+  { label: 'Futuristic black outfit', v: 'wearing a sleek black futuristic outfit' },
+  { label: 'Uniform', v: 'wearing a period accurate uniform' },
 ];
 
-// ─── SUBJECT DATA
-const SUBJ_GROUP=[
-  {label:"Solo",v:"solo"},
-  {label:"Two people",v:"two"},
-  {label:"Small group (3–5)",v:"group"},
-  {label:"Large crowd",v:"crowd"},
-  {label:"Packed crowd",v:"packed"},
-  {label:"Just the scene",v:"none"},
-];
-const SUBJ_GENDER=[
-  {label:"Woman",v:"woman"},
-  {label:"Man",v:"man"},
-  {label:"Girl",v:"girl"},
-  {label:"Boy",v:"boy"},
-];
-const SUBJ_AGE=[
-  {label:"Toddler",v:"toddler"},{label:"Child",v:"child"},{label:"Pre-teen",v:"pre-teen"},
-  {label:"Teen",v:"teenager"},{label:"Early 20s",v:"early 20s"},{label:"Mid 20s",v:"mid 20s"},
-  {label:"Late 20s",v:"late 20s"},{label:"Early 30s",v:"early 30s"},{label:"Mid 30s",v:"mid 30s"},
-  {label:"40s",v:"40s"},{label:"50s",v:"50s"},{label:"60s",v:"60s"},{label:"Elderly",v:"elderly"},
-];
-const SUBJ_ETHNICITY=[
-  {label:"East Asian",v:"East Asian"},{label:"Southeast Asian",v:"Southeast Asian"},
-  {label:"South Asian",v:"South Asian"},{label:"Black",v:"Black"},
-  {label:"Afro-Latina",v:"Afro-Latina"},{label:"Latina",v:"Latina"},
-  {label:"Middle Eastern",v:"Middle Eastern"},{label:"North African",v:"North African"},
-  {label:"White / European",v:"White European"},{label:"Scandinavian",v:"Scandinavian"},
-  {label:"Mixed",v:"mixed ethnicity"},
-];
-const SUBJ_BUILD=[
-  {label:"Very slim",v:"very slim"},{label:"Slim",v:"slim"},
-  {label:"Lean / athletic",v:"lean athletic"},{label:"Muscular",v:"muscular"},
-  {label:"Average",v:"average build"},{label:"Curvy",v:"curvy"},
-  {label:"Plus size",v:"plus size"},{label:"Petite",v:"petite"},
-  {label:"Tall and lean",v:"tall and lean"},{label:"Short and stocky",v:"short and stocky"},
-];
-const SUBJ_HAIR_LEN=[
-  {label:"Buzzed / shaved",v:"buzzed"},{label:"Very short",v:"very short"},
-  {label:"Short",v:"short"},{label:"Ear length",v:"ear-length"},
-  {label:"Shoulder length",v:"shoulder-length"},{label:"Mid-back",v:"mid-back length"},
-  {label:"Very long",v:"very long"},{label:"Waist length",v:"waist-length"},
-];
-const SUBJ_HAIR_TEX=[
-  {label:"Straight",v:"straight"},{label:"Wavy",v:"wavy"},
-  {label:"Loose curls",v:"loosely curled"},{label:"Tight curls",v:"tightly curled"},
-  {label:"Coily",v:"coily"},{label:"Kinky",v:"kinky"},
-];
-const SUBJ_HAIR_STYLE=[
-  {label:"Down and loose",v:"worn loose and down"},{label:"Messy bun",v:"in a messy bun"},
-  {label:"Sleek updo",v:"in a sleek updo"},{label:"High ponytail",v:"in a high ponytail"},
-  {label:"Low ponytail",v:"in a low ponytail"},{label:"Braids",v:"in braids"},
-  {label:"Locs",v:"in locs"},{label:"Cornrows",v:"in cornrows"},
-  {label:"Pigtails",v:"in pigtails"},{label:"Half up half down",v:"half up half down"},
-  {label:"Slicked back",v:"slicked back"},{label:"Tousled / bedhead",v:"tousled and bedhead"},
-  {label:"Curtain bangs",v:"with curtain bangs"},{label:"Side swept",v:"side swept"},
-];
-const COLORS=[
-  {label:"Black",v:"black",hex:"#181818"},{label:"Dark brown",v:"dark brown",hex:"#3d1f00"},
-  {label:"Brown",v:"medium brown",hex:"#7b4b2a"},{label:"Auburn",v:"auburn",hex:"#9e3515"},
-  {label:"Dirty blonde",v:"dirty blonde",hex:"#c9a535"},{label:"Blonde",v:"blonde",hex:"#e8c840"},
-  {label:"Platinum",v:"platinum blonde",hex:"#e8e8e0"},{label:"Grey",v:"grey",hex:"#909090"},
-  {label:"White",v:"white",hex:"#e8e8e8"},{label:"Vivid red",v:"vivid red",hex:"#cc2020"},
-  {label:"Hot pink",v:"hot pink",hex:"#ff4d9e"},{label:"Purple",v:"deep purple",hex:"#7020c0"},
-  {label:"Blue",v:"electric blue",hex:"#0080ff"},{label:"Green",v:"bright green",hex:"#00bb44"},
-  {label:"Teal",v:"teal",hex:"#008878"},{label:"Orange",v:"vivid orange",hex:"#ff6600"},
-  {label:"Multicolor",v:"multicolor rainbow ombre",hex:"linear-gradient(90deg,#ff4d9e,#ff6600,#e8c840,#00bb44,#0080ff,#7020c0)"},
-];
-const SUBJ_OUTFIT=[
-  {label:"Streetwear",v:"streetwear outfit"},{label:"High fashion editorial",v:"high fashion editorial outfit"},
-  {label:"Luxury casual",v:"luxury casual outfit"},{label:"Formal / business",v:"formal business attire"},
-  {label:"Ball gown",v:"ball gown"},{label:"Suit",v:"tailored suit"},
-  {label:"Uniform",v:"uniform"},{label:"Athletic / sportswear",v:"athletic sportswear"},
-  {label:"Swimwear",v:"swimwear"},{label:"Fantasy armor",v:"fantasy armor"},
-  {label:"Fantasy robes",v:"fantasy robes"},{label:"Sci-fi suit",v:"futuristic sci-fi suit"},
-  {label:"Cyberpunk",v:"cyberpunk outfit"},{label:"School uniform",v:"school uniform"},
-  {label:"Military",v:"military outfit"},{label:"Vintage 50s",v:"vintage 1950s outfit"},
-  {label:"Vintage 70s",v:"vintage 1970s outfit"},{label:"Vintage 90s",v:"vintage 1990s outfit"},
-  {label:"Workwear / utility",v:"workwear utility outfit"},{label:"Monochrome",v:"monochrome outfit"},
-  {label:"Minimalist",v:"minimalist outfit"},{label:"Avant-garde",v:"avant-garde fashion"},
-];
-const SUBJ_POSE=[
-  {label:"Standing straight",v:"standing upright with straight posture"},
-  {label:"Standing relaxed",v:"standing relaxed, weight shifted to one side"},
-  {label:"Hands in pockets",v:"standing with both hands in pockets"},
-  {label:"Arms crossed",v:"standing with arms crossed"},
-  {label:"Facing camera",v:"facing directly toward the camera"},
-  {label:"Three-quarter turn",v:"turned at a three-quarter angle to the camera"},
-  {label:"Turned away",v:"turned fully away from the camera"},
-  {label:"Walking toward",v:"walking toward the camera, mid-stride"},
-  {label:"Walking away",v:"walking away from the camera"},
-  {label:"Running toward",v:"running toward the camera"},
-  {label:"Running away",v:"running urgently away from the camera"},
-  {label:"Sprinting hard",v:"sprinting at full speed, motion blur, intense urgency"},
-  {label:"Jumping",v:"jumping in the air, suspended mid-leap"},
-  {label:"Crouching",v:"crouching low to the ground"},
-  {label:"Sitting — legs crossed",v:"sitting cross-legged on the ground"},
-  {label:"Sitting — leaning forward",v:"sitting and leaning forward with elbows on knees"},
-  {label:"Sitting — leaning back",v:"sitting and leaning back, relaxed"},
-  {label:"Sitting on ground",v:"sitting casually on the ground"},
-  {label:"Lying down",v:"lying down, resting"},
-  {label:"Looking over shoulder",v:"looking back over their shoulder at the camera"},
-  {label:"Mid-dance",v:"mid-dance, dynamic movement, body in motion"},
-  {label:"Reaching out",v:"reaching one hand out toward the camera"},
-  {label:"Kneeling",v:"kneeling on one knee"},
-  {label:"Climbing",v:"climbing upward, hands gripping a surface"},
-];
-// ─── VISUAL QUALITY
-const VISUAL_QUALITY={
-  "Photographic":[
-    {label:"Photorealistic",v:"photorealistic, indistinguishable from a real photograph"},
-    {label:"Hyperrealistic",v:"hyperrealistic, ultra-sharp detail, every surface rendered precisely"},
-    {label:"Film photography",v:"shot on 35mm film, analog grain, warm color shift, slightly imperfect"},
-    {label:"Documentary / raw",v:"raw documentary photography, unpolished, authentic, handheld feel"},
-    {label:"Noir",v:"noir photography, high contrast black and white, deep dramatic shadows"},
-    {label:"Infrared",v:"infrared photography, alien glowing whites, surreal color inversion"},
-    {label:"Long exposure",v:"long exposure photography, motion blur, light trails, time compression"},
-    {label:"Double exposure",v:"double exposure, two scenes merged and layered together"},
-  ],
-  "Illustrated":[
-    {label:"Pencil sketch",v:"detailed pencil sketch, hand-drawn graphite lines, visible hatching"},
-    {label:"Ink drawing",v:"bold ink illustration, expressive brushwork linework, high contrast"},
-    {label:"Charcoal",v:"charcoal drawing, dark smudged texture, dramatic tonal range"},
-    {label:"Watercolor",v:"watercolor painting, soft bleeding edges, luminous color washes"},
-    {label:"Oil painting",v:"oil painting, thick impasto brushwork, rich classical color palette"},
-    {label:"Acrylic painting",v:"acrylic painting, bold flat color, modern painterly texture"},
-    {label:"Digital painting",v:"polished digital painting, concept art quality, detailed render"},
-    {label:"Poster / flat art",v:"bold graphic poster art, flat colors, strong silhouettes, limited palette"},
-    {label:"Linocut / woodblock",v:"linocut print style, bold carved lines, rough texture, limited color"},
-    {label:"Screen print",v:"screen print style, flat color layers, slight ink texture, retro feel"},
-  ],
-  "Anime & Comic":[
-    {label:"Soft anime",v:"soft anime illustration, smooth skin texture, delicate shading, clean refined linework"},
-    {label:"Gritty anime",v:"gritty anime style, bold heavy lines, high contrast, dynamic composition"},
-    {label:"Manga",v:"black and white manga style, screen tones, expressive linework, dramatic angles"},
-    {label:"Webtoon",v:"webtoon illustration style, clean digital linework, modern Korean manhwa aesthetic"},
-    {label:"Western comic",v:"western comic book style, bold color blocking, graphic ink shadows, hero proportions"},
-    {label:"Cartoon",v:"cartoon style, simplified shapes, exaggerated proportions, bright colors"},
-    {label:"Exaggerated",v:"exaggerated proportions, oversized expressive features, hyper-stylized"},
-    {label:"Chibi / super deformed",v:"chibi super-deformed style, oversized head, tiny body, cute exaggeration"},
-  ],
-  "Graphic & Geometric":[
-    {label:"Flat design",v:"flat design, minimal, no shadows or gradients, clean graphic shapes"},
-    {label:"Low poly / geometric",v:"low poly geometric style, angular faceted shapes, triangulated surfaces"},
-    {label:"Stained glass",v:"stained glass style, leaded geometric color panels, jewel-tone colors"},
-    {label:"Mosaic",v:"mosaic tile style, small colored tiles forming the whole image"},
-    {label:"Vector graphic",v:"clean vector graphic style, smooth paths, pure flat color areas"},
-    {label:"Collage",v:"photographic collage, cut-and-paste layered textures, mixed media feel"},
-  ],
-  "Surreal & Dark":[
-    {label:"Hallucinatory",v:"hallucinatory, reality warping, impossible geometry, fever dream logic, mind-bending"},
-    {label:"Surrealist",v:"surrealist, dreamlike melting reality, impossible physics, Dalí-esque"},
-    {label:"Psychedelic",v:"psychedelic, intense saturated swirling colors, fractal patterns, kaleidoscopic"},
-    {label:"Glitch art",v:"glitch art aesthetic, digital corruption, pixel distortion, RGB channel separation"},
-    {label:"Abstract expressionist",v:"abstract expressionist, emotional gestural marks, non-representational energy"},
-    {label:"Dark fantasy painted",v:"dark fantasy illustration, intricate painted detail, ominous foreboding atmosphere"},
-    {label:"Gothic illustrated",v:"gothic illustration style, ornate dark detail, Victorian engraving quality"},
-  ],
-  "CGI & 3D":[
-    {label:"CGI rendered",v:"CGI rendered, physically based materials, ray traced lighting, global illumination"},
-    {label:"Octane / Unreal Engine",v:"Octane Render, Unreal Engine 5, hyperrealistic CGI, photorealistic materials"},
-    {label:"Clay render",v:"clay render, matte smooth clay-like surfaces, soft diffused lighting"},
-    {label:"3D animated",v:"3D animation style, smooth polished surfaces, Pixar-quality rendering"},
-    {label:"Holographic / neon",v:"holographic neon aesthetic, glowing translucent surfaces, iridescent light"},
-    {label:"Miniature / tilt-shift",v:"tilt-shift miniature effect, selective focus planes, toy-like scale illusion"},
-    {label:"Stop motion",v:"stop motion animation aesthetic, textured handmade physical feel"},
-  ],
-  "Aesthetic & Tone":[
-    {label:"Cottagecore",v:"cottagecore aesthetic, natural textures, warm golden sunlight, botanical detail"},
-    {label:"Solarpunk",v:"solarpunk aesthetic, living plant-covered structures, warm optimistic light"},
-    {label:"Lo-fi nostalgic",v:"lo-fi nostalgic aesthetic, retro technology, faded warm film tones, quiet solitude"},
-    {label:"Dark academia",v:"dark academia aesthetic, candlelight, dark polished wood, intellectual brooding"},
-    {label:"Y2K retro",v:"Y2K retro aesthetic, early 2000s palette, plastic surfaces, oversaturated"},
-    {label:"Dreamcore",v:"dreamcore aesthetic, hazy soft focus, floating surreal warmth, barely-real"},
-    {label:"Cozy kawaii",v:"cozy kawaii aesthetic, soft pastel colors, cute decorative objects, warm gentle light"},
-    {label:"Cyberpunk neon",v:"cyberpunk neon aesthetic, electric neon color palette, rain-slicked reflective surfaces"},
-    {label:"Golden futurism",v:"golden futurism aesthetic, warm copper and amber tones, iridescent pearlescent highlights"},
-    {label:"Cold sci-fi",v:"cold sci-fi aesthetic, desaturated blue-grey palette, clinical precision, hard directed light"},
-    {label:"Film noir",v:"film noir aesthetic, deep dramatic shadow play, black and grey palette, mystery and tension"},
-    {label:"Vintage americana",v:"vintage americana aesthetic, warm retro mid-century color palette, Kodachrome feel"},
-    {label:"80s neon retro",v:"1980s neon retro aesthetic, hot pink and electric blue, synthwave color palette"},
-    {label:"Horror",v:"horror aesthetic, oppressive suffocating darkness, unsettling foreground detail, dread"},
-    {label:"Epic fantasy",v:"epic high fantasy aesthetic, painted mythic scale, dramatic supernatural light"},
-    {label:"Wuxia / ink wash",v:"wuxia ink wash aesthetic, flowing brushwork, mist and mountain, traditional East Asian"},
-  ],
-};
-
-const SUBJ_EXPRESSION=[
-  {label:"Confident",v:"confident"},{label:"Fierce / intense",v:"fierce and intense"},
-  {label:"Mysterious",v:"mysterious and enigmatic"},{label:"Cool / unbothered",v:"cool and unbothered"},
-  {label:"Seductive",v:"seductive"},{label:"Joyful / laughing",v:"joyful and laughing"},
-  {label:"Smiling softly",v:"smiling softly"},{label:"Playful",v:"playful and spirited"},
-  {label:"Excited",v:"excited and energetic"},{label:"Surprised",v:"surprised"},
-  {label:"Sad",v:"sad and downcast"},{label:"Melancholic",v:"melancholic and introspective"},
-  {label:"Vulnerable",v:"vulnerable and emotional"},{label:"Scared",v:"scared and fearful"},
-  {label:"Tense / nervous",v:"tense and nervous"},{label:"Angry",v:"angry and furious"},
-  {label:"Defiant",v:"defiant and rebellious"},{label:"Dreamy / distant",v:"dreamy and distant"},
-  {label:"In thought",v:"deep in thought, contemplative"},{label:"Serene / peaceful",v:"serene and peaceful"},
-  {label:"Exhausted",v:"exhausted and worn down"},{label:"Determined",v:"determined and focused"},
-  {label:"Commanding",v:"commanding and authoritative"},
+const POSES = [
+  { label: 'Standing relaxed', v: 'standing relaxed, weight shifted to one side' },
+  { label: 'Facing camera', v: 'facing directly toward the camera' },
+  { label: 'Three-quarter turn', v: 'turned at a three-quarter angle to the camera' },
+  { label: 'Looking over shoulder', v: 'looking back over their shoulder' },
+  { label: 'Sitting still', v: 'sitting still with composed posture' },
+  { label: 'Walking casually', v: 'walking casually, natural stride' },
+  { label: 'Close-up face', v: 'tight close-up on the face' },
 ];
 
-// ─── SETTINGS
-const SETTINGS={
-  "City":[
-    {label:"Tokyo crossing — dense neon, crowds, energy",v:"a busy Tokyo-style Shibuya crossing, dense neon signage, crowds of people"},
-    {label:"New York street — brownstones, grit, character",v:"a New York city street with brownstones and urban grit"},
-    {label:"Steep downhill street — buildings cascade toward the bay",v:"a steep city street sloping sharply down toward the bay, parked cars along both sides"},
-    {label:"Rain-soaked alley at night — puddles, glow, silence",v:"a narrow rain-soaked urban alley at night, wet reflective pavement and glowing signs"},
-    {label:"Subway station — platforms, tiles, fluorescent hum",v:"a busy metro station platform with tiled walls and fluorescent overhead lights"},
-    {label:"Rooftop — looking out over the whole city skyline",v:"a rooftop terrace with a panoramic view over the city skyline"},
-    {label:"Convenience store at night — warm glow, snacks, comfort",v:"a glowing convenience store interior at night, shelves of snacks, warm light"},
-    {label:"Open highway — wide lanes, flat horizon, big sky",v:"an open highway stretching toward a flat horizon under enormous sky"},
-  ],
-  "Nature":[
-    {label:"Forest path — dappled light, canopy, quiet trail",v:"a sunlit forest path with dappled light filtering through the tree canopy"},
-    {label:"Mountain summit — panoramic view, valleys, clouds below",v:"a mountain summit with a panoramic view over valleys and clouds far below"},
-    {label:"Beach at sunset — warm water, sand, gentle waves",v:"a sandy beach at sunset, warm golden light on the water and gentle waves"},
-    {label:"Rolling countryside — fields, farm buildings, big sky",v:"open rolling countryside with green fields and farm buildings under a wide sky"},
-    {label:"Jungle waterfall — lush green, mist, ancient moss",v:"a jungle waterfall surrounded by lush green vegetation and ancient mossy stones"},
-    {label:"Vast snowfield — white expanse, tracks, cold clear light",v:"a vast open snowfield, cold clear light, distant mountains on the horizon"},
-    {label:"Desert at dawn — dunes, long shadows, pink sky",v:"desert sand dunes at dawn with long golden shadows and a pink glowing sky"},
-    {label:"Ocean cliffside — wind, spray, dramatic sheer drop",v:"a clifftop edge overlooking a dramatic ocean far below, wind and sea spray"},
-  ],
-  "Fantasy & Sci-Fi":[
-    {label:"Futuristic mega-city — towers, flying vehicles, massive scale",v:"a colossal futuristic city with towering glass and steel spires, flying vehicles in the sky"},
-    {label:"Medieval fantasy village — timber, torchlight, cobblestones",v:"a medieval fantasy village with timber-framed buildings and warm lantern glow on cobblestones"},
-    {label:"Cyberpunk street — neon rain, dense wires, vertical chaos",v:"a cyberpunk street drenched in neon light and rain, dense overhead wiring, layered signage"},
-    {label:"Alien planet — strange sky, impossible geology, unknown life",v:"the surface of an alien planet with an unusual colored sky and strange alien vegetation"},
-    {label:"Ancient overgrown ruins — crumbling stone, reclaimed by nature",v:"ancient overgrown ruins, crumbling stone columns and archways consumed by jungle"},
-    {label:"Outer space — stars, void, planet glowing below",v:"outer space view with a glowing planet below, stars and deep cosmic void"},
-    {label:"Underwater city — domes, coral, deep blue light",v:"an underwater city with glass domes on the seafloor, coral formations, shafts of light from above"},
-    {label:"Floating sky islands — landmasses drifting in clouds",v:"floating island landmasses drifting high in a cloudy sky, waterfalls spilling off the edges"},
-  ],
-  "Indoors":[
-    {label:"Cozy bedroom — string lights, personal things, warm glow",v:"a cozy personal bedroom with string lights and warm intimate ambient light"},
-    {label:"Grand library — towering shelves, ladders, sacred quiet",v:"a grand library with towering shelves of books reaching the high ceiling"},
-    {label:"Café interior — small tables, steam, morning calm",v:"a quiet café interior with small wooden tables and warm morning light"},
-    {label:"Hospital or lab — white, sterile, clinical and cold",v:"a sterile hospital or laboratory interior with white surfaces and clinical fluorescent light"},
-    {label:"Arcade or game center — glowing screens, retro nostalgia",v:"a retro arcade game center filled with glowing screens and colorful light"},
-    {label:"Temple or shrine — incense, wood, candlelight, still air",v:"a traditional temple interior with drifting incense smoke and warm candlelight"},
-    {label:"Warehouse loft — raw brick, skylights, industrial scale",v:"a converted warehouse or artist loft with raw exposed brick and industrial skylights"},
-    {label:"Train car — passengers, windows, motion outside",v:"inside a moving train car, passengers seated, countryside passing beyond the windows"},
-  ],
-};
-
-
-// ─── MOODS
-const MOODS=[
-  {label:"Peaceful and still",v:"meditative stillness, serene and undisturbed"},
-  {label:"Warm and full of life",v:"warm vibrant energy, full of life and human presence"},
-  {label:"Lonely and vast",v:"profound solitude, vast empty space, deep isolation"},
-  {label:"Tense — something is about to happen",v:"charged atmosphere, uneasy tension, something about to happen"},
-  {label:"Magical and otherworldly",v:"ethereal magical quality, otherworldly beauty and wonder"},
-  {label:"Gloomy and melancholic",v:"gloomy ambiance, melancholic and heavy, lifeless feeling"},
-  {label:"Cozy and intimate",v:"intimate cozy warmth, safe and enclosed, soft ambient glow"},
-  {label:"Epic and awe-inspiring",v:"epic monumental scale, awe-inspiring, civilizational weight"},
-  {label:"Eerie — something is wrong",v:"eerie unsettling atmosphere, something wrong just out of frame, uncanny stillness"},
-  {label:"Nostalgic and bittersweet",v:"nostalgic warmth, bittersweet memory, golden half-remembered past"},
-  {label:"Chaotic and overwhelming",v:"overwhelming visual chaos, dense layered information, sensory overload"},
-  {label:"Clean and precise",v:"clean precise composition, ordered and deliberate"},
+const SETTINGS = [
+  { label: 'NYC brownstone street', v: 'on a New York City street with brownstones and urban grit' },
+  { label: 'Rainy alley', v: 'in a narrow rain-soaked alley with wet reflective pavement' },
+  { label: 'Retro arcade', v: 'inside a retro arcade filled with glowing CRT screens' },
+  { label: 'Industrial machinery', v: 'in front of rusted industrial machinery, cables, pipes, and damp metal' },
+  { label: '1970s Bronx street', v: 'on a gritty 1973 Bronx street corner beside a period accurate patrol car' },
+  { label: 'Small town 1930s street', v: 'on a small town main street in the 1930s with period accurate storefronts' },
+  { label: 'White sand dunes', v: 'in white gypsum sand dunes with sparse yucca plants and vast sky' },
+  { label: 'Luxury bar interior', v: 'inside a dim luxury bar with warm ambient light and cinematic shadows' },
+  { label: 'Custom', v: 'custom' },
 ];
 
-// ─── TIMES
-const TIMES=[
-  {label:"Dawn — pale sky, first light before sunrise",v:"at dawn, pale first light, sky just turning"},
-  {label:"Morning — soft cool light, long gentle shadows",v:"in the early morning, soft cool light and long gentle shadows"},
-  {label:"Midday — harsh overhead sun, hard shadows",v:"at midday, harsh overhead sunlight, hard short shadows"},
-  {label:"Golden hour — warm orange glow, long shadows",v:"at golden hour, warm orange-gold light and long dramatic shadows"},
-  {label:"Blue hour — deep blue sky, city lights just on",v:"at blue hour, deep blue sky and emerging city lights"},
-  {label:"Night — full darkness, artificial or moonlight",v:"at night, full darkness, lit by artificial or moonlight only"},
-  {label:"Overcast — flat soft light, no harsh shadows",v:"under an overcast sky, flat diffused light, no harsh shadows"},
-  {label:"Stormy — dark clouds, dramatic charged air",v:"under a stormy sky with dark dramatic clouds and charged atmosphere"},
+const LIGHTS = [
+  { label: 'Golden hour', v: 'golden hour light, warm orange-gold highlights, long dramatic shadows' },
+  { label: 'Blue hour', v: 'blue hour light, deep blue sky, city lights beginning to glow' },
+  { label: 'Noir contrast', v: 'dramatic noir lighting, deep blacks, hard shadows, luminous highlights' },
+  { label: 'Dim tungsten', v: 'dim warm tungsten interior light, soft pools of shadow' },
+  { label: 'Night neon', v: 'night neon lighting, colored reflections, wet surfaces' },
+  { label: 'Overcast soft', v: 'overcast soft light, muted shadows, subdued atmosphere' },
+  { label: 'Flat poster light', v: 'flat poster lighting, clean shapes, simplified light and shadow' },
 ];
 
-// ─── CAMERAS
-const CAMERAS=[
-  {label:"Wide — whole scene visible",v:"wide establishing shot showing the full scene"},
-  {label:"Eye level — natural, like standing there",v:"eye level perspective, natural human viewpoint"},
-  {label:"From behind — subject walks away from us",v:"shot from behind, subject moving away from the camera"},
-  {label:"From above — bird's eye view",v:"aerial bird's eye view looking straight down"},
-  {label:"Low angle — looking up, subject dominates",v:"low angle shot looking upward, subject towers above camera"},
-  {label:"Close up — tight on face or key detail",v:"tight close-up on face or key detail"},
-  {label:"Symmetrical — dead center, tunnel framing",v:"centered one-point perspective, perfectly symmetrical composition"},
-  {label:"Slightly tilted — uneasy, something is off",v:"slightly dutch angle, creating subtle tension and unease"},
+const MOODS = [
+  { label: 'Mysterious', v: 'mysterious and enigmatic mood' },
+  { label: 'Nostalgic', v: 'nostalgic and bittersweet atmosphere' },
+  { label: 'Gritty', v: 'gritty, tense, lived-in atmosphere' },
+  { label: 'Eerie', v: 'eerie stillness, something feels wrong just outside the frame' },
+  { label: 'Romantic', v: 'romantic cinematic atmosphere, intimate and warm' },
+  { label: 'Calm', v: 'calm, quiet, composed feeling' },
+  { label: 'Chaotic', v: 'controlled visual intensity, energetic but still readable' },
 ];
 
-// ─── RATIOS
-const RATIOS=[
-  {label:"16:9 Widescreen",v:"16:9"},
-  {label:"9:16 Tall / phone",v:"9:16"},
-  {label:"1:1 Square",v:"1:1"},
-  {label:"4:5 Portrait",v:"4:5"},
-  {label:"3:2 Photo feel",v:"3:2"},
-  {label:"21:9 Ultra wide",v:"21:9"},
+const EFFECTS = [
+  { label: 'No extra effect', v: '' },
+  { label: 'Subtle film grain', v: 'visible film grain, soft halation, imperfect analog surface' },
+  { label: 'Controlled glitch', v: 'controlled glitch artifacts, subtle pixel distortion around the edges only, sharp face and clean subject' },
+  { label: 'Ink hatching', v: 'bold ink hatching, scratchy line texture, hand-drawn marks' },
+  { label: 'Aged print', v: 'aged paper texture, faded ink, slight border wear' },
+  { label: 'Dense background detail', v: 'dense background detail, layered environment, subject remains clear' },
+  { label: 'Single red accent', v: 'black and grayscale palette with one vivid blood-red accent' },
+  { label: 'Gold tint', v: 'black and white with subtle warm gold tint' },
 ];
 
-// ─── PROMPT ASSEMBLY
-function buildSubject(sg,sgender,sage,seth,sbuild,shlen,shtex,shstyle,shcolor,soutfit,soutfitcolor,spose,sexp){
-  if(!sg||sg==="none") return "";
-  if(sg==="packed") return "a massive packed crowd of people, hundreds of figures filling every inch of the frame";
-  if(sg==="crowd") return "a large crowd of people";
-  if(sg==="group") return "a small group of people (3-5)";
-  if(sg==="two"){
-    const bits=["two people"];
-    if(spose) bits.push(spose);
-    if(sexp) bits.push(sexp);
-    return bits.join(", ");
-  }
-  // Solo
-  const parts=[];
-  const youngAges=["toddler","child","pre-teen","teenager"];
-  const buildStr=sbuild?`${sbuild} `:"";
-  const ethStr=seth?`${seth} `:"";
-  const genderStr=sgender||"person";
-  if(youngAges.includes(sage)) parts.push(`a ${buildStr}${ethStr}${genderStr} who is a ${sage}`);
-  else{
-    parts.push(`a ${buildStr}${ethStr}${genderStr}`);
-    if(sage) parts.push(`in their ${sage}`);
-  }
-  // Hair
-  if(shlen==="buzzed"){
-    parts.push("with a buzzed shaved head");
-  } else if(shlen||shtex||shstyle||shcolor){
-    const lenStr=shlen?`${shlen} `:"";
-    const texStr=shtex?`${shtex} `:"";
-    const colorStr=shcolor?`${shcolor} `:"";
-    const styleStr=shstyle?` ${shstyle}`:"";
-    parts.push(`with ${colorStr}${lenStr}${texStr}hair${styleStr}`);
-  }
-  // Outfit
-  if(soutfit||soutfitcolor){
-    const colorStr=soutfitcolor?`${soutfitcolor} `:"";
-    const outfitStr=soutfit||"clothing";
-    parts.push(`wearing ${colorStr}${outfitStr}`);
-  }
-  if(spose) parts.push(spose);
-  if(sexp) parts.push(sexp);
-  return parts.filter(Boolean).join(", ");
-}
+const RATIOS = ['9:16', '16:9', '4:5', '1:1', '3:2', '21:9'];
 
-function buildPrompt({subject,settingObj,quality,moodObj,timeObj,cameraObj,ratio,stylize,custom,recipeObj,paletteObj,eraObj,textureObj,chaos,weird,raw,noText}){
-  const p=[];
-  const sv=settingObj?settingObj.v:"";
-  const camV=cameraObj?cameraObj.v:"";
-  const qualStr=quality&&quality.length?quality.join(", "):"";
-  // MJ responds best when the visual identity comes first, then palette/era, then subject/world/light.
-  if(recipeObj&&recipeObj.v) p.push(recipeObj.v);
-  if(qualStr) p.push(qualStr);
-  if(paletteObj&&paletteObj.v) p.push(paletteObj.v);
-  if(eraObj&&eraObj.v) p.push(eraObj.v);
-  if(subject) p.push(subject);
-  if(sv) p.push(sv);
-  if(timeObj) p.push(timeObj.v);
-  if(moodObj) p.push(moodObj.v);
-  if(camV) p.push(camV);
-  if(textureObj&&textureObj.v) p.push(textureObj.v);
-  if(custom) p.push(custom);
-  if(noText) p.push("no visible text, no readable words, no logos, no watermarks");
-  const filled=p.filter(x=>x&&x.trim());
-  if(!filled.length) return "";
-  let params=" --v 7 --ar "+ratio+" --s "+stylize;
-  if(chaos>0) params += " --chaos "+chaos;
-  if(weird>0) params += " --weird "+weird;
-  if(raw) params += " --style raw";
-  return filled.join(", ")+params;
-}
+function pick(list, value) { return list.find(x => x.v === value) || null; }
+function joinClean(parts) { return parts.filter(x => x && String(x).trim()).join(', '); }
 
-// ─── CSS
-const CSS=`
-@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700&family=JetBrains+Mono:wght@400;500&family=Rajdhani:wght@400;500;600&display=swap');
-*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
-.app{min-height:100vh;background:var(--bg);background-image:linear-gradient(var(--gc) 1px,transparent 1px),linear-gradient(90deg,var(--gc) 1px,transparent 1px);background-size:44px 44px;color:var(--tx);font-family:'Rajdhani',sans-serif;}
-
-.hdr{padding:0.9rem 1.25rem 0.75rem;border-bottom:1px solid var(--bd);position:relative;overflow:hidden;}
-.hdr::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:var(--hl);}
-.hdr-row{display:flex;align-items:flex-start;justify-content:space-between;}
-.hdr-logo{font-family:'Cinzel',serif;font-size:1.15rem;font-weight:700;letter-spacing:0.12em;color:var(--pri);text-shadow:0 0 18px var(--priG),0 0 40px var(--priG);}
-.hdr-sub{font-family:'JetBrains Mono',monospace;font-size:0.48rem;letter-spacing:0.2em;text-transform:uppercase;color:var(--secD);margin-top:0.18rem;}
-.swatches{display:flex;gap:0.4rem;align-items:center;padding-top:0.15rem;}
-.sw{width:18px;height:18px;border-radius:50%;cursor:pointer;border:2px solid transparent;transition:all 0.15s;flex-shrink:0;}
-.sw.on{border-color:var(--tx);transform:scale(1.2);}
-
-.mode-bar{padding:0.65rem 1.25rem;border-bottom:1px solid var(--bd);display:flex;gap:0.4rem;flex-wrap:wrap;}
-.mb{display:flex;align-items:center;gap:0.4rem;padding:0.35rem 0.7rem;border:1px solid var(--bdH);background:transparent;color:var(--mu);font-family:'Rajdhani',sans-serif;font-size:0.82rem;font-weight:500;border-radius:3px;cursor:pointer;transition:all 0.15s;white-space:nowrap;}
-.mb:hover{border-color:var(--pri);color:var(--pri);}
-.mb.on{border-color:var(--pri);background:var(--priG);color:var(--pri);box-shadow:0 0 10px var(--priG);}
-.mb-icon{font-size:1.05rem;line-height:1;}
-.mb-txt{}
-.mb-name{display:block;font-size:0.82rem;}
-.mb-sub{display:block;font-size:0.56rem;color:var(--di);font-family:'JetBrains Mono',monospace;letter-spacing:0.04em;}
-.mb.on .mb-sub{color:var(--secD);}
-
-.reset-bar{display:flex;justify-content:flex-end;padding:0.25rem 1.25rem 0;}
-.reset-btn{background:none;border:none;font-family:'JetBrains Mono',monospace;font-size:0.5rem;color:var(--di);cursor:pointer;letter-spacing:0.1em;text-transform:uppercase;transition:color 0.15s;}
-.reset-btn:hover{color:var(--mu);}
-
-.sections{padding:0.9rem 1.25rem 230px;display:flex;flex-direction:column;gap:1.35rem;}
-.sec{border-left:1px solid var(--bd);padding-left:0.85rem;position:relative;}
-.sec::before{content:'';position:absolute;top:0;left:-1px;width:1px;height:22px;background:var(--sa);box-shadow:0 0 6px var(--secG);}
-.sec-head{display:flex;align-items:center;gap:0.5rem;margin-bottom:0.72rem;}
-.sec-n{font-family:'JetBrains Mono',monospace;font-size:0.52rem;color:var(--sec);opacity:0.8;min-width:1.4rem;}
-.sec-t{font-family:'Cinzel',serif;font-size:0.58rem;letter-spacing:0.2em;text-transform:uppercase;color:var(--pri);text-shadow:0 0 10px var(--priG);}
-.sec-line{flex:1;height:1px;background:linear-gradient(to right,var(--bdH),transparent);}
-.field{margin-bottom:0.72rem;}.field:last-child{margin-bottom:0;}
-.fl{font-family:'JetBrains Mono',monospace;font-size:0.54rem;letter-spacing:0.1em;color:var(--mu);margin-bottom:0.32rem;text-transform:uppercase;}
-.fn{font-size:0.58rem;color:var(--di);font-family:'Rajdhani',sans-serif;}
-.div{height:1px;background:linear-gradient(to right,var(--bdH),var(--bd),transparent);}
-
-.chips{display:flex;flex-wrap:wrap;gap:0.28rem;margin-bottom:0.45rem;}
-.chip{padding:0.2rem 0.5rem;border:1px solid var(--bdH);background:transparent;color:var(--di);font-family:'Rajdhani',sans-serif;font-size:0.72rem;font-weight:500;border-radius:2px;cursor:pointer;transition:all 0.1s;}
-.chip:hover{border-color:var(--sec);color:var(--sec);}
-.subj-in{width:100%;background:var(--bgI);border:1px solid var(--bdH);color:var(--tx);padding:0.58rem 0.8rem;font-family:'Rajdhani',sans-serif;font-size:0.9rem;font-weight:500;border-radius:2px;outline:none;transition:border-color 0.15s;}
-.subj-in:focus{border-color:var(--pri);box-shadow:0 0 0 1px var(--priG);}
-.subj-in::placeholder{color:var(--di);}
-
-.pills{display:flex;flex-wrap:wrap;gap:0.32rem;}
-.pill{padding:0.28rem 0.62rem;border:1px solid var(--bdH);background:transparent;color:var(--mu);font-family:'Rajdhani',sans-serif;font-size:0.8rem;font-weight:500;letter-spacing:0.02em;border-radius:2px;cursor:pointer;transition:all 0.12s;text-align:left;line-height:1.3;}
-.pill:hover{border-color:var(--pri);color:var(--pri);background:var(--priG);}
-.pill.on{border-color:var(--pri);background:var(--priG);color:var(--pri);box-shadow:0 0 8px var(--priG);text-shadow:0 0 8px var(--priG);}
-.stabs{display:flex;flex-wrap:wrap;gap:0.28rem;margin-bottom:0.45rem;}
-.stab{padding:0.22rem 0.58rem;border:1px solid var(--bdH);background:transparent;color:var(--di);font-family:'JetBrains Mono',monospace;font-size:0.5rem;letter-spacing:0.12em;text-transform:uppercase;border-radius:2px;cursor:pointer;transition:all 0.12s;}
-.stab:hover{border-color:var(--secD);color:var(--sec);}
-.stab.on{background:var(--secG);border-color:var(--sec);color:var(--sec);box-shadow:0 0 8px var(--secG);}
-
-select{width:100%;background:var(--bgI);border:1px solid var(--bdH);color:var(--tx);padding:0.5rem 2rem 0.5rem 0.75rem;font-family:'Rajdhani',sans-serif;font-size:0.85rem;font-weight:500;border-radius:2px;appearance:none;cursor:pointer;background-repeat:no-repeat;background-position:right 0.75rem center;transition:border-color 0.15s;}
-select:focus{outline:none;border-color:var(--pri);box-shadow:0 0 0 1px var(--priG);}
-select option{background:var(--bgI);color:var(--tx);}
-
-.sectype{display:flex;flex-direction:column;gap:0.65rem;}
-.sectype-label{font-family:'JetBrains Mono',monospace;font-size:0.5rem;letter-spacing:0.12em;text-transform:uppercase;color:var(--di);margin-bottom:0.2rem;}
-
-.custom-in{width:100%;background:var(--bgI);border:1px solid var(--bdH);color:var(--tx);padding:0.6rem 0.8rem;font-family:'Rajdhani',sans-serif;font-size:0.88rem;font-weight:400;border-radius:2px;outline:none;resize:vertical;min-height:70px;transition:border-color 0.15s;line-height:1.55;}
-.custom-in:focus{border-color:var(--pri);}
-.custom-in::placeholder{color:var(--di);font-size:0.82rem;}
-
-.slider-wrap{display:flex;flex-direction:column;gap:0.35rem;}
-.slider-row{display:flex;justify-content:space-between;align-items:center;}
-.slider-val{font-family:'JetBrains Mono',monospace;font-size:0.82rem;color:var(--pri);text-shadow:0 0 8px var(--priG);}
-input[type=range]{width:100%;-webkit-appearance:none;height:2px;border-radius:1px;outline:none;cursor:pointer;}
-input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:13px;height:13px;background:var(--pri);border-radius:50%;border:2px solid var(--bg);cursor:pointer;box-shadow:0 0 5px var(--priG);}
-.szones{display:flex;justify-content:space-between;font-family:'JetBrains Mono',monospace;font-size:0.46rem;color:var(--di);letter-spacing:0.05em;}
-
-.pbar{position:fixed;bottom:0;left:0;right:0;background:var(--pb);border-top:1px solid var(--bdH);padding:0.72rem 1.25rem 0.85rem;z-index:999;}
-.pbar::before{content:'';position:absolute;top:-1px;left:0;right:0;height:1px;background:var(--hl);}
-.pbar-lbl{font-family:'JetBrains Mono',monospace;font-size:0.46rem;letter-spacing:0.22em;text-transform:uppercase;color:var(--secD);margin-bottom:0.32rem;}
-.pout{background:var(--bgI);border:1px solid var(--bdH);border-radius:2px;padding:0.58rem 0.75rem;font-family:'JetBrains Mono',monospace;font-size:0.6rem;line-height:1.6;color:var(--pt);min-height:48px;max-height:70px;overflow-y:auto;margin-bottom:0.52rem;word-break:break-word;}
-.pout-empty{color:var(--di);font-style:italic;}
-.pout-p{color:var(--sec);}
-.copy-btn{width:100%;padding:0.65rem;background:var(--pri);border:none;color:var(--bg);font-family:'Cinzel',serif;font-size:0.7rem;font-weight:700;letter-spacing:0.22em;text-transform:uppercase;cursor:pointer;border-radius:2px;transition:all 0.15s;box-shadow:0 0 16px var(--priG);}
-.copy-btn:hover:not(:disabled){filter:brightness(1.12);box-shadow:0 0 26px var(--priG);}
-.copy-btn:disabled{background:var(--bgI);border:1px solid var(--bd);color:var(--di);cursor:not-allowed;box-shadow:none;}
-.copy-btn.ok{background:#00e090;color:#040c06;box-shadow:0 0 20px rgba(0,224,144,0.35);}
-
-::-webkit-scrollbar{width:3px;}
-::-webkit-scrollbar-track{background:transparent;}
-::-webkit-scrollbar-thumb{background:var(--bdH);border-radius:2px;}
-
-/* subject builder */
-.subrows{display:flex;flex-direction:column;gap:0.65rem;}
-.subrow{}
-.subrow-lbl{font-family:'JetBrains Mono',monospace;font-size:0.48rem;letter-spacing:0.12em;text-transform:uppercase;color:var(--di);margin-bottom:0.28rem;}
-.cpills{display:flex;flex-wrap:wrap;gap:0.28rem;}
-.cpill{display:flex;align-items:center;gap:0.32rem;padding:0.22rem 0.5rem 0.22rem 0.28rem;border:1px solid var(--bdH);background:transparent;color:var(--mu);font-family:'Rajdhani',sans-serif;font-size:0.72rem;font-weight:500;border-radius:2px;cursor:pointer;transition:all 0.12s;white-space:nowrap;}
-.cpill:hover{border-color:var(--pri);color:var(--pri);}
-.cpill.on{border-color:var(--pri);background:var(--priG);color:var(--pri);box-shadow:0 0 8px var(--priG);}
-.cdot{width:10px;height:10px;border-radius:50%;flex-shrink:0;border:1px solid rgba(255,255,255,0.18);}
-.subj-preview{font-family:'JetBrains Mono',monospace;font-size:0.58rem;color:var(--secD);background:var(--bgI);border:1px solid var(--bd);border-radius:2px;padding:0.45rem 0.65rem;margin-top:0.5rem;line-height:1.5;min-height:32px;word-break:break-word;}
-.subj-preview-empty{color:var(--di);font-style:italic;}
-.subj-divider{height:1px;background:var(--bd);margin:0.5rem 0;}
-`;
-
-// ─── COMPONENTS
-function SH({n,t}){return <div className="sec-head"><span className="sec-n">{String(n).padStart(2,"0")}</span><span className="sec-t">{t}</span><div className="sec-line"/></div>;}
-function FL({c,note}){return <div className="fl">{c}{note&&<span className="fn"> {note}</span>}</div>;}
-function Pill({item,val,onToggle}){return <button className={`pill ${val===item.v?"on":""}`} onClick={()=>onToggle(val===item.v?null:item.v)}>{item.label}</button>;}
-function PillGroup({items,val,onToggle}){return <div className="pills">{items.map(it=><Pill key={it.v} item={it} val={val} onToggle={onToggle}/>)}</div>;}
-
-// ─── APP
-function App(){
-  const [theme,  setTheme]  = useState("cyber");
-  const [recipe,setRecipe]= useState(null);
-  const [palette,setPalette]= useState(null);
-  const [era,setEra]= useState(null);
-  const [texture,setTexture]= useState(null);
-  const [sg,     setSg]     = useState(null);
-  const [sgender,setSgender]= useState(null);
-  const [sage,   setSage]   = useState(null);
-  const [seth,   setSeth]   = useState(null);
-  const [sbuild, setSbuild] = useState(null);
-  const [shlen,  setShlen]  = useState(null);
-  const [shtex,  setShtex]  = useState(null);
-  const [shstyle,setShstyle]= useState(null);
-  const [shcolor,setShcolor]= useState(null);
-  const [soutfit,setSoutfit]= useState(null);
-  const [soutfitcolor,setSoutfitcolor]= useState(null);
-  const [spose,  setSpose]  = useState(null);
-  const [sexp,   setSexp]   = useState(null);
-  const [scat,   setScat]   = useState("City");
-  const [sval,   setSval]   = useState("");
-  const [mood,   setMood]   = useState(null);
-  const [time,   setTime]   = useState(null);
-  const [cam,    setCam]    = useState(null);
-  const [ratio,  setRatio]  = useState("16:9");
-  const [styl,   setStyl]   = useState(250);
-  const [chaos, setChaos]  = useState(0);
-  const [weird, setWeird]  = useState(0);
-  const [raw, setRaw]      = useState(false);
-  const [noText,setNoText] = useState(true);
-  const [custom, setCustom] = useState("");
-  const [qualCat,setQualCat]= useState("Photographic");
-  const [qualSels,setQualSels]= useState([]);
+function App() {
+  const [recipe, setRecipe] = useState(RECIPES[0].v);
+  const [subject, setSubject] = useState(SUBJECTS[1].v);
+  const [customSubject, setCustomSubject] = useState('');
+  const [look, setLook] = useState('');
+  const [wardrobe, setWardrobe] = useState('');
+  const [pose, setPose] = useState(POSES[0].v);
+  const [setting, setSetting] = useState(SETTINGS[0].v);
+  const [customSetting, setCustomSetting] = useState('');
+  const [light, setLight] = useState(LIGHTS[0].v);
+  const [mood, setMood] = useState(MOODS[0].v);
+  const [effect, setEffect] = useState('');
+  const [details, setDetails] = useState('');
+  const [ratio, setRatio] = useState('9:16');
+  const [stylize, setStylize] = useState(175);
+  const [chaos, setChaos] = useState(3);
+  const [raw, setRaw] = useState(true);
+  const [noText, setNoText] = useState(true);
+  const [advanced, setAdvanced] = useState(false);
   const [copied, setCopied] = useState(false);
 
-  const T=THEMES[theme];
-  const vars={"--bg":T.bg,"--bgI":T.bgI,"--bd":T.bd,"--bdH":T.bdH,"--pb":T.pb,"--pri":T.pri,"--priG":T.priG,"--sec":T.sec,"--secD":T.secD,"--secG":T.secG,"--tx":T.tx,"--mu":T.mu,"--di":T.di,"--pt":T.pt,"--gc":T.gc,"--hl":T.hl,"--sa":T.sa};
-  const arrCSS=`select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='8' height='5' viewBox='0 0 8 5'%3E%3Cpath d='M0 0l4 5 4-5z' fill='${T.ah}' opacity='0.9'/%3E%3C/svg%3E");}`;
+  const recipeObj = useMemo(() => pick(RECIPES, recipe), [recipe]);
 
-  const recipeObj  = useMemo(()=>VISUAL_RECIPES.find(x=>x.v===recipe)||null,[recipe]);
-  const paletteObj = useMemo(()=>PALETTES.find(x=>x.v===palette)||null,[palette]);
-  const eraObj     = useMemo(()=>ERAS.find(x=>x.v===era)||null,[era]);
-  const textureObj = useMemo(()=>TEXTURE_ATMOS.find(x=>x.v===texture)||null,[texture]);
-  const settingObj = useMemo(()=>Object.values(SETTINGS).flat().find(x=>x.v===sval)||null,[sval]);
-  const moodObj    = useMemo(()=>MOODS.find(x=>x.v===mood)||null,[mood]);
-  const timeObj    = useMemo(()=>TIMES.find(x=>x.v===time)||null,[time]);
-  const camObj     = useMemo(()=>CAMERAS.find(x=>x.v===cam)||null,[cam]);
+  function chooseRecipe(v) {
+    const r = pick(RECIPES, v);
+    setRecipe(v);
+    if (r) {
+      setStylize(r.s);
+      setRaw(r.raw);
+      setChaos(v.includes('glitch') ? 5 : 3);
+      if (v.includes('poster')) {
+        setEffect('');
+        setNoText(true);
+      }
+      if (v.includes('glitch')) setEffect(EFFECTS[2].v);
+      if (v.includes('crime')) setEffect(EFFECTS[1].v);
+      if (v.includes('manga')) setEffect(EFFECTS[3].v);
+    }
+  }
 
-  const builtSubject = useMemo(()=>buildSubject(sg,sgender,sage,seth,sbuild,shlen,shtex,shstyle,shcolor,soutfit,soutfitcolor,spose,sexp),[sg,sgender,sage,seth,sbuild,shlen,shtex,shstyle,shcolor,soutfit,soutfitcolor,spose,sexp]);
-  const prompt = useMemo(()=>buildPrompt({subject:builtSubject,settingObj,moodObj,timeObj,cameraObj:camObj,quality:qualSels,ratio,stylize:styl,custom,recipeObj,paletteObj,eraObj,textureObj,chaos,weird,raw,noText}),[builtSubject,settingObj,moodObj,timeObj,camObj,qualSels,ratio,styl,custom,recipeObj,paletteObj,eraObj,textureObj,chaos,weird,raw,noText]);
+  const subjectLine = useMemo(() => {
+    const base = subject === 'custom' ? customSubject : subject;
+    if (!base) return '';
+    return joinClean([base, look, wardrobe, pose]);
+  }, [subject, customSubject, look, wardrobe, pose]);
 
-  const promptScene  = prompt?prompt.replace(/\s--.*$/s,""):"";
-  const promptParams = prompt?(prompt.match(/\s(--.*)$/s)?.[1]||""):"";
+  const settingLine = setting === 'custom' ? customSetting : setting;
 
-  const changeScat=(c)=>{setScat(c);setSval("");};
+  const prompt = useMemo(() => {
+    const body = joinClean([
+      recipeObj?.v,
+      subjectLine,
+      settingLine,
+      light,
+      mood,
+      effect,
+      details,
+      noText ? 'no visible text, no readable words, no logos, no watermarks' : ''
+    ]);
+    if (!body) return '';
+    let params = ` --v 7 --ar ${ratio} --s ${stylize}`;
+    if (chaos > 0) params += ` --chaos ${chaos}`;
+    if (raw) params += ' --style raw';
+    return body + params;
+  }, [recipeObj, subjectLine, settingLine, light, mood, effect, details, noText, ratio, stylize, chaos, raw]);
 
-  const copy=async()=>{
-    if(!prompt)return;
-    try{await navigator.clipboard.writeText(prompt);}catch{}
-    setCopied(true);setTimeout(()=>setCopied(false),2200);
-  };
+  const promptScene = prompt ? prompt.replace(/\s--.*$/s, '') : '';
+  const promptParams = prompt ? (prompt.match(/\s(--.*)$/s)?.[1] || '') : '';
 
-  const reset=()=>{setRecipe(null);setPalette(null);setEra(null);setTexture(null);setChaos(0);setWeird(0);setRaw(false);setNoText(true);setSg(null);setSgender(null);setSage(null);setSeth(null);setSbuild(null);setShlen(null);setShtex(null);setShstyle(null);setShcolor(null);setSoutfit(null);setSoutfitcolor(null);setSpose(null);setSexp(null);setSval("");setMood(null);setTime(null);setCam(null);setQualCat("Photographic");setQualSels([]);setRatio("16:9");setStyl(250);setCustom("");};
+  async function copy() {
+    if (!prompt) return;
+    try { await navigator.clipboard.writeText(prompt); } catch(e) {}
+    setCopied(true);
+    setTimeout(() => setCopied(false), 1800);
+  }
 
+  function reset() {
+    setRecipe(RECIPES[0].v);
+    setSubject(SUBJECTS[1].v);
+    setCustomSubject('');
+    setLook('');
+    setWardrobe('');
+    setPose(POSES[0].v);
+    setSetting(SETTINGS[0].v);
+    setCustomSetting('');
+    setLight(LIGHTS[0].v);
+    setMood(MOODS[0].v);
+    setEffect('');
+    setDetails('');
+    setRatio('9:16');
+    setStylize(175);
+    setChaos(3);
+    setRaw(true);
+    setNoText(true);
+  }
 
-
-  return <>
-    <style>{CSS}</style>
-    <style>{arrCSS}</style>
-    <div className="app" style={vars}>
-
-      <div className="hdr">
-        <div className="hdr-row">
-          <div>
-            <div className="hdr-logo">SceneForge</div>
-            <div className="hdr-sub">MidJourney V7 Prompt Builder</div>
-          </div>
-          <div className="swatches">
-            {Object.entries(THEMES).map(([k,t])=>(
-              <div key={k} className={`sw ${theme===k?"on":""}`}
-                style={{background:`linear-gradient(135deg,${t.dot1} 50%,${t.dot2} 50%)`}}
-                onClick={()=>setTheme(k)} title={t.name}/>
-            ))}
-          </div>
-        </div>
-      </div>
-
-      <div className="reset-bar">
-        <button className="reset-btn" onClick={reset}>↺ Reset</button>
-      </div>
-
-      <div className="sections">
-
-        {/* 01 VISUAL STYLE & QUALITY */}
-        <div className="sec">
-          <SH n={1} t="Visual Style & Quality"/>
-          <div className="subrow-lbl" style={{marginBottom:"0.45rem"}}>Pick up to 3 — sets the rendering medium MidJourney builds from</div>
-          <div className="stabs">
-            {Object.keys(VISUAL_QUALITY).map(cat=>(
-              <button key={cat} className={`stab ${qualCat===cat?"on":""}`} onClick={()=>setQualCat(cat)}>{cat}</button>
-            ))}
-          </div>
-          <div className="pills">
-            {VISUAL_QUALITY[qualCat].map(it=>(
-              <button key={it.v}
-                className={`pill ${qualSels.includes(it.v)?"on":""}`}
-                onClick={()=>{
-                  if(qualSels.includes(it.v)) setQualSels(qualSels.filter(x=>x!==it.v));
-                  else if(qualSels.length<3) setQualSels([...qualSels,it.v]);
-                }}>
-                {it.label}
-              </button>
-            ))}
-          </div>
-          {qualSels.length>0&&(
-            <div style={{marginTop:"0.5rem",display:"flex",flexWrap:"wrap",gap:"0.3rem"}}>
-              {qualSels.map(v=>{
-                const found=Object.values(VISUAL_QUALITY).flat().find(it=>it.v===v);
-                return found?(<div key={v} style={{display:"flex",alignItems:"center",gap:"0.3rem",padding:"0.18rem 0.45rem",border:"1px solid var(--pri)",borderRadius:"2px",background:"var(--priG)"}}>
-                  <span style={{fontFamily:"JetBrains Mono,monospace",fontSize:"0.5rem",color:"var(--pri)"}}>{found.label}</span>
-                  <button onClick={()=>setQualSels(qualSels.filter(x=>x!==v))} style={{background:"none",border:"none",color:"var(--pri)",cursor:"pointer",fontSize:"0.6rem",padding:0,lineHeight:1}}>✕</button>
-                </div>):null;
-              })}
-            </div>
-          )}
-        </div>
-
-        <div className="div"/>
-
-        {/* 02 AESTHETIC ENGINE */}
-        <div className="sec">
-          <SH n={2} t="Aesthetic Engine"/>
-          <div className="subrow-lbl" style={{marginBottom:"0.45rem"}}>This is the secret sauce — choose the image family before the subject gets too loud</div>
-          <div className="subrow">
-            <div className="subrow-lbl">Image Recipe</div>
-            <div className="pills">{VISUAL_RECIPES.map(it=><button key={it.v} className={`pill ${recipe===it.v?"on":""}`} onClick={()=>setRecipe(recipe===it.v?null:it.v)}>{it.label}</button>)}</div>
-          </div>
-          <div className="subrow" style={{marginTop:"0.65rem"}}>
-            <div className="subrow-lbl">Palette Discipline</div>
-            <div className="pills">{PALETTES.map(it=><button key={it.label} className={`pill ${palette===it.v?"on":""}`} onClick={()=>setPalette(palette===it.v?null:it.v)}>{it.label}</button>)}</div>
-          </div>
-          <div className="subrow" style={{marginTop:"0.65rem"}}>
-            <div className="subrow-lbl">Era Anchor</div>
-            <div className="pills">{ERAS.map(it=><button key={it.label} className={`pill ${era===it.v?"on":""}`} onClick={()=>setEra(era===it.v?null:it.v)}>{it.label}</button>)}</div>
-          </div>
-          <div className="subrow" style={{marginTop:"0.65rem"}}>
-            <div className="subrow-lbl">Texture / Atmosphere</div>
-            <div className="pills">{TEXTURE_ATMOS.map(it=><button key={it.v} className={`pill ${texture===it.v?"on":""}`} onClick={()=>setTexture(texture===it.v?null:it.v)}>{it.label}</button>)}</div>
-          </div>
-        </div>
-
-        <div className="div"/>
-
-        {/* 03 SUBJECT */}
-        <div className="sec">
-          <SH n={3} t="Who's in it?"/>
-          <div className="subrows">
-            <div className="subrow">
-              <div className="subrow-lbl">Group Size</div>
-              <div className="pills">{SUBJ_GROUP.map(it=><button key={it.v} className={`pill ${sg===it.v?"on":""}`} onClick={()=>setSg(sg===it.v?null:it.v)}>{it.label}</button>)}</div>
-            </div>
-            {(sg==="solo"||sg==="two")&&<>
-              {sg==="solo"&&<div className="subrow">
-                <div className="subrow-lbl">Gender</div>
-                <div className="pills">{SUBJ_GENDER.map(it=><button key={it.v} className={`pill ${sgender===it.v?"on":""}`} onClick={()=>setSgender(sgender===it.v?null:it.v)}>{it.label}</button>)}</div>
-              </div>}
-              {sg==="solo"&&<div className="subrow">
-                <div className="subrow-lbl">Age</div>
-                <div className="pills">{SUBJ_AGE.map(it=><button key={it.v} className={`pill ${sage===it.v?"on":""}`} onClick={()=>setSage(sage===it.v?null:it.v)}>{it.label}</button>)}</div>
-              </div>}
-              {sg==="solo"&&<div className="subrow">
-                <div className="subrow-lbl">Ethnicity</div>
-                <div className="pills">{SUBJ_ETHNICITY.map(it=><button key={it.v} className={`pill ${seth===it.v?"on":""}`} onClick={()=>setSeth(seth===it.v?null:it.v)}>{it.label}</button>)}</div>
-              </div>}
-              {sg==="solo"&&<div className="subrow">
-                <div className="subrow-lbl">Build</div>
-                <div className="pills">{SUBJ_BUILD.map(it=><button key={it.v} className={`pill ${sbuild===it.v?"on":""}`} onClick={()=>setSbuild(sbuild===it.v?null:it.v)}>{it.label}</button>)}</div>
-              </div>}
-              {sg==="solo"&&<div className="subrow-lbl" style={{marginTop:"0.2rem",paddingTop:"0.4rem",borderTop:"1px solid var(--bd)"}}>HAIR</div>}
-              {sg==="solo"&&<div className="subrow">
-                <div className="subrow-lbl">Length</div>
-                <div className="pills">{SUBJ_HAIR_LEN.map(it=><button key={it.v} className={`pill ${shlen===it.v?"on":""}`} onClick={()=>setShlen(shlen===it.v?null:it.v)}>{it.label}</button>)}</div>
-              </div>}
-              {sg==="solo"&&<div className="subrow">
-                <div className="subrow-lbl">Texture</div>
-                <div className="pills">{SUBJ_HAIR_TEX.map(it=><button key={it.v} className={`pill ${shtex===it.v?"on":""}`} onClick={()=>setShtex(shtex===it.v?null:it.v)}>{it.label}</button>)}</div>
-              </div>}
-              {sg==="solo"&&<div className="subrow">
-                <div className="subrow-lbl">Hair Style</div>
-                <div className="pills">{SUBJ_HAIR_STYLE.map(it=><button key={it.v} className={`pill ${shstyle===it.v?"on":""}`} onClick={()=>setShstyle(shstyle===it.v?null:it.v)}>{it.label}</button>)}</div>
-              </div>}
-              {sg==="solo"&&<div className="subrow">
-                <div className="subrow-lbl">Hair Color</div>
-                <div className="cpills">{COLORS.map(it=><button key={it.v} className={`cpill ${shcolor===it.v?"on":""}`} onClick={()=>setShcolor(shcolor===it.v?null:it.v)}><span className="cdot" style={{background:it.hex}}/>{it.label}</button>)}</div>
-              </div>}
-              <div className="subrow-lbl" style={{marginTop:"0.2rem",paddingTop:"0.4rem",borderTop:"1px solid var(--bd)"}}>OUTFIT</div>
-              <div className="subrow">
-                <div className="subrow-lbl">Style</div>
-                <div className="pills">{SUBJ_OUTFIT.map(it=><button key={it.v} className={`pill ${soutfit===it.v?"on":""}`} onClick={()=>setSoutfit(soutfit===it.v?null:it.v)}>{it.label}</button>)}</div>
-              </div>
-              <div className="subrow">
-                <div className="subrow-lbl">Outfit Color</div>
-                <div className="cpills">{COLORS.map(it=><button key={it.v} className={`cpill ${soutfitcolor===it.v?"on":""}`} onClick={()=>setSoutfitcolor(soutfitcolor===it.v?null:it.v)}><span className="cdot" style={{background:it.hex}}/>{it.label}</button>)}</div>
-              </div>
-              <div className="subrow-lbl" style={{marginTop:"0.2rem",paddingTop:"0.4rem",borderTop:"1px solid var(--bd)"}}>ACTION</div>
-              <div className="subrow">
-                <div className="subrow-lbl">Pose / Action</div>
-                <div className="pills">{SUBJ_POSE.map(it=><button key={it.v} className={`pill ${spose===it.v?"on":""}`} onClick={()=>setSpose(spose===it.v?null:it.v)}>{it.label}</button>)}</div>
-              </div>
-              <div className="subrow">
-                <div className="subrow-lbl">Expression / Energy</div>
-                <div className="pills">{SUBJ_EXPRESSION.map(it=><button key={it.v} className={`pill ${sexp===it.v?"on":""}`} onClick={()=>setSexp(sexp===it.v?null:it.v)}>{it.label}</button>)}</div>
-              </div>
-            </>}
-            {builtSubject&&<div className="subj-preview">{builtSubject}</div>}
-            {!builtSubject&&sg&&sg!=="none"&&sg!=="solo"&&sg!=="two"&&<div className="subj-preview subj-preview-empty">{sg==="group"?"a small group of people":sg==="crowd"?"a large crowd of people":"a massive packed crowd"}</div>}
-          </div>
-        </div>
-
-        <div className="div"/>
-
-        {/* 03 WHERE */}
-        <div className="sec">
-          <SH n={4} t="Where?"/>
-          <div className="stabs">
-            {Object.keys(SETTINGS).map(cat=><button key={cat} className={`stab ${scat===cat?"on":""}`} onClick={()=>changeScat(cat)}>{cat}</button>)}
-          </div>
-          <select value={sval} onChange={e=>setSval(e.target.value)}>
-            <option value="">— Pick a setting —</option>
-            {SETTINGS[scat].map(s=><option key={s.v} value={s.v}>{s.label}</option>)}
-          </select>
-        </div>
-
-        <div className="div"/>
-
-        {/* 04 LIGHT & TIME */}
-        <div className="sec">
-          <SH n={5} t="Light & Time"/>
-          <PillGroup items={TIMES} val={time} onToggle={setTime}/>
-        </div>
-
-        <div className="div"/>
-
-        {/* 05 THE FEELING */}
-        <div className="sec">
-          <SH n={6} t="The Feeling"/>
-          <PillGroup items={MOODS} val={mood} onToggle={setMood}/>
-        </div>
-
-        <div className="div"/>
-
-        {/* 06 CAMERA */}
-        <div className="sec">
-          <SH n={7} t="Camera Angle"/>
-          <PillGroup items={CAMERAS} val={cam} onToggle={setCam}/>
-        </div>
-
-        <div className="div"/>
-
-        {/* 07 CUSTOM */}
-        <div className="sec">
-          <SH n={8} t="Anything Else?"/>
-          <FL c="Specific details, objects, colors, textures — things the buttons don't cover"/>
-          <textarea className="custom-in" value={custom} onChange={e=>setCustom(e.target.value)}
-            placeholder="e.g. her jacket is slightly wet, a blurred taxi in the background, steam rising from a grate nearby..."/>
-        </div>
-
-        <div className="div"/>
-
-        {/* 08 PARAMS */}
-        <div className="sec">
-          <SH n={9} t="Output Settings"/>
-          <div className="field">
-            <FL c="Aspect Ratio"/>
-            <div className="pills">
-              {RATIOS.map(r=><button key={r.v} className={`pill ${ratio===r.v?"on":""}`} onClick={()=>setRatio(r.v)}>{r.label}</button>)}
-            </div>
-          </div>
-          <div className="slider-wrap">
-            <div className="slider-row">
-              <FL c="Stylize" note={<span style={{fontSize:"0.52rem",color:"var(--di)"}}>--s</span>}/>
-              <span className="slider-val">{styl}</span>
-            </div>
-            <input type="range" min={50} max={900} value={styl}
-              style={{background:`linear-gradient(to right,var(--pri) 0%,var(--pri) ${((styl-50)/850)*100}%,var(--bdH) ${((styl-50)/850)*100}%,var(--bdH) 100%)`}}
-              onChange={e=>setStyl(parseInt(e.target.value))}/>
-            <div className="szones"><span>Literal / photo</span><span>Cinematic</span><span>Painterly</span><span>MJ takes over</span></div>
-          </div>
-          <div className="slider-wrap" style={{marginTop:"0.9rem"}}>
-            <div className="slider-row">
-              <FL c="Chaos" note={<span style={{fontSize:"0.52rem",color:"var(--di)"}}>--chaos</span>}/>
-              <span className="slider-val">{chaos}</span>
-            </div>
-            <input type="range" min={0} max={80} value={chaos}
-              style={{background:`linear-gradient(to right,var(--sec) 0%,var(--sec) ${(chaos/80)*100}%,var(--bdH) ${(chaos/80)*100}%,var(--bdH) 100%)`}}
-              onChange={e=>setChaos(parseInt(e.target.value))}/>
-            <div className="szones"><span>Locked in</span><span>Some surprise</span><span>Wild cards</span><span>Chaos beast</span></div>
-          </div>
-          <div className="slider-wrap" style={{marginTop:"0.9rem"}}>
-            <div className="slider-row">
-              <FL c="Weird" note={<span style={{fontSize:"0.52rem",color:"var(--di)"}}>--weird</span>}/>
-              <span className="slider-val">{weird}</span>
-            </div>
-            <input type="range" min={0} max={1000} value={weird}
-              style={{background:`linear-gradient(to right,var(--sec) 0%,var(--sec) ${(weird/1000)*100}%,var(--bdH) ${(weird/1000)*100}%,var(--bdH) 100%)`}}
-              onChange={e=>setWeird(parseInt(e.target.value))}/>
-            <div className="szones"><span>Normal</span><span>Odd</span><span>Strange</span><span>Dream machine</span></div>
-          </div>
-          <div className="pills" style={{marginTop:"0.9rem"}}>
-            <button className={`pill ${raw?"on":""}`} onClick={()=>setRaw(!raw)}>Style Raw</button>
-            <button className={`pill ${noText?"on":""}`} onClick={()=>setNoText(!noText)}>No Text / Logos</button>
-          </div>
-        </div>
-
-      </div>
-
-      <div className="pbar">
-        <div className="pbar-lbl">Generated Prompt</div>
-        <div className="pout">
-          {prompt
-            ?<><span>{promptScene}</span><span className="pout-p">{promptParams?" "+promptParams:""}</span></>
-            :<span className="pout-empty">Select a visual style and start building — your prompt assembles here</span>}
-        </div>
-        <button className={`copy-btn ${copied?"ok":""}`} onClick={copy} disabled={!prompt}>
-          {copied?"✓  Copied to Clipboard":"Copy Prompt →"}
-        </button>
-      </div>
-
+  return <div className="app">
+    <div className="hdr">
+      <div className="logo">SceneForge Slim</div>
+      <div className="sub">Midjourney prompt builder, one clean spine</div>
     </div>
-  </>;
+
+    <div className="sections">
+      <div className="sec">
+        <div className="sec-head"><span className="num">01</span><span className="title">Recipe</span><div className="line" /></div>
+        <div className="hint">Pick one strong visual identity. This is the steering wheel.</div>
+        <div className="pills">{RECIPES.map(r => <button key={r.v} className={'pill ' + (recipe === r.v ? 'on' : '')} onClick={() => chooseRecipe(r.v)}>{r.label}</button>)}</div>
+        <div className="preview">{recipeObj?.v}</div>
+      </div>
+
+      <div className="sec">
+        <div className="sec-head"><span className="num">02</span><span className="title">Subject</span><div className="line" /></div>
+        <div className="grid2">
+          <div>
+            <div className="label">Subject</div>
+            <select value={subject} onChange={e => setSubject(e.target.value)}>
+              {SUBJECTS.map(x => <option key={x.label} value={x.v}>{x.label}</option>)}
+            </select>
+            {subject === 'custom' && <input style={{marginTop: '.45rem'}} type="text" value={customSubject} onChange={e => setCustomSubject(e.target.value)} placeholder="e.g. a 35-year-old Native American woman" />}
+          </div>
+          <div>
+            <div className="label">Look</div>
+            <select value={look} onChange={e => setLook(e.target.value)}>{LOOKS.map(x => <option key={x.label} value={x.v}>{x.label}</option>)}</select>
+          </div>
+          <div>
+            <div className="label">Wardrobe</div>
+            <select value={wardrobe} onChange={e => setWardrobe(e.target.value)}>{WARDROBE.map(x => <option key={x.label} value={x.v}>{x.label}</option>)}</select>
+          </div>
+          <div>
+            <div className="label">Pose</div>
+            <select value={pose} onChange={e => setPose(e.target.value)}>{POSES.map(x => <option key={x.label} value={x.v}>{x.label}</option>)}</select>
+          </div>
+        </div>
+        <div className="preview">{subjectLine || 'No subject selected'}</div>
+      </div>
+
+      <div className="sec">
+        <div className="sec-head"><span className="num">03</span><span className="title">Place</span><div className="line" /></div>
+        <select value={setting} onChange={e => setSetting(e.target.value)}>{SETTINGS.map(x => <option key={x.label} value={x.v}>{x.label}</option>)}</select>
+        {setting === 'custom' && <input style={{marginTop: '.45rem'}} type="text" value={customSetting} onChange={e => setCustomSetting(e.target.value)} placeholder="e.g. inside a dim motel room with old floral wallpaper" />}
+      </div>
+
+      <div className="sec">
+        <div className="sec-head"><span className="num">04</span><span className="title">Light</span><div className="line" /></div>
+        <div className="pills">{LIGHTS.map(x => <button key={x.v} className={'pill ' + (light === x.v ? 'on' : '')} onClick={() => setLight(x.v)}>{x.label}</button>)}</div>
+      </div>
+
+      <div className="sec">
+        <div className="sec-head"><span className="num">05</span><span className="title">Mood</span><div className="line" /></div>
+        <div className="pills">{MOODS.map(x => <button key={x.v} className={'pill ' + (mood === x.v ? 'on' : '')} onClick={() => setMood(x.v)}>{x.label}</button>)}</div>
+      </div>
+
+      <div className="sec">
+        <div className="sec-head"><span className="num">06</span><span className="title">One Effect</span><div className="line" /></div>
+        <div className="hint">Only one extra effect. This keeps Midjourney from turning into soup.</div>
+        <div className="pills">{EFFECTS.map(x => <button key={x.label} className={'pill ' + (effect === x.v ? 'on' : '')} onClick={() => setEffect(x.v)}>{x.label}</button>)}</div>
+      </div>
+
+      <div className="sec">
+        <div className="sec-head"><span className="num">07</span><span className="title">Details</span><div className="line" /></div>
+        <textarea value={details} onChange={e => setDetails(e.target.value)} placeholder="Add one or two important details only, like: red lipstick, steam from a manhole, cracked pavement, distant neon reflection." />
+      </div>
+
+      <div className="sec">
+        <div className="sec-head"><span className="num">08</span><span className="title">Output</span><div className="line" /></div>
+        <div className="label">Aspect Ratio</div>
+        <div className="pills">{RATIOS.map(r => <button key={r} className={'pill ' + (ratio === r ? 'on' : '')} onClick={() => setRatio(r)}>{r}</button>)}</div>
+        <div className="slider">
+          <div className="row"><div className="label">Stylize</div><span className="slider-val">{stylize}</span></div>
+          <input type="range" min="50" max="700" value={stylize} onChange={e => setStylize(parseInt(e.target.value))} />
+          <div className="small">Lower is literal. Higher lets Midjourney decorate the room.</div>
+        </div>
+        <div className="toggle-row">
+          <button className={'pill ' + (advanced ? 'on' : '')} onClick={() => setAdvanced(!advanced)}>Advanced</button>
+          <button className={'pill ' + (raw ? 'on' : '')} onClick={() => setRaw(!raw)}>Style Raw</button>
+          <button className={'pill ' + (noText ? 'on' : '')} onClick={() => setNoText(!noText)}>No Text / Logos</button>
+          <button className="pill" onClick={reset}>Reset</button>
+        </div>
+        {advanced && <div className="slider">
+          <div className="row"><div className="label">Chaos</div><span className="slider-val">{chaos}</span></div>
+          <input type="range" min="0" max="40" value={chaos} onChange={e => setChaos(parseInt(e.target.value))} />
+          <div className="small">Keep this low for portraits. 0 to 8 is usually the clean zone.</div>
+        </div>}
+      </div>
+    </div>
+
+    <div className="bar">
+      <div className="bar-inner">
+        <div className="bar-lbl">Generated Prompt</div>
+        <div className="out">{prompt ? <><span>{promptScene}</span><span className="params"> {promptParams}</span></> : 'Build a prompt above.'}</div>
+        <button className={'copy ' + (copied ? 'ok' : '')} disabled={!prompt} onClick={copy}>{copied ? 'Copied' : 'Copy Prompt'}</button>
+      </div>
+    </div>
+  </div>;
 }
 
-ReactDOM.createRoot(document.getElementById("root")).render(<App/>);
-</script>
+ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+  </script>
 </body>
 </html>
