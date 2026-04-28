@@ -23,24 +23,206 @@ const THEMES={
   gothic:{name:"Gothic Ruin",dot1:"#e040a8",dot2:"#9040cc",bg:"#090508",bgI:"#140a14",bd:"#2a1428",bdH:"#3e1e3c",pb:"#0c0710",pri:"#e040a8",priG:"rgba(224,64,168,0.22)",sec:"#9040cc",secD:"#7030a8",secG:"rgba(144,64,204,0.18)",tx:"#f0e4f0",mu:"#c098c0",di:"#5e3860",pt:"#c898c8",gc:"rgba(224,64,168,0.015)",ah:"%23e040a8",hl:"linear-gradient(90deg,transparent,#9040cc,#e040a8,transparent)",sa:"#9040cc"},
 };
 
-// ─── MODES
-const MODES=[
-  {id:"photo",     icon:"📷",label:"Photo",     sub:"Real photography"},
-  {id:"cinematic", icon:"🎬",label:"Cinematic", sub:"Movie-quality CGI"},
-  {id:"illustrated",icon:"🎨",label:"Illustrated",sub:"Anime & painted"},
-  {id:"dark",      icon:"🌑",label:"Dark Art",  sub:"Fantasy & surreal"},
-  {id:"vibe",      icon:"✨",label:"Vibe",      sub:"Cozy & aesthetic"},
-];
 
-// ─── SUBJECT CHIPS
-const CHIPS=[
-  {label:"A woman",fill:"a woman"},
-  {label:"A man",fill:"a man"},
-  {label:"A child",fill:"a child"},
-  {label:"A couple",fill:"a couple"},
-  {label:"A crowd",fill:"a crowd of people"},
-  {label:"An animal",fill:"an animal"},
-  {label:"Just the scene",fill:""},
+// ─── SUBJECT DATA
+const SUBJ_GROUP=[
+  {label:"Solo",v:"solo"},
+  {label:"Two people",v:"two"},
+  {label:"Small group (3–5)",v:"group"},
+  {label:"Large crowd",v:"crowd"},
+  {label:"Packed crowd",v:"packed"},
+  {label:"Just the scene",v:"none"},
+];
+const SUBJ_GENDER=[
+  {label:"Woman",v:"woman"},
+  {label:"Man",v:"man"},
+  {label:"Girl",v:"girl"},
+  {label:"Boy",v:"boy"},
+];
+const SUBJ_AGE=[
+  {label:"Toddler",v:"toddler"},{label:"Child",v:"child"},{label:"Pre-teen",v:"pre-teen"},
+  {label:"Teen",v:"teenager"},{label:"Early 20s",v:"early 20s"},{label:"Mid 20s",v:"mid 20s"},
+  {label:"Late 20s",v:"late 20s"},{label:"Early 30s",v:"early 30s"},{label:"Mid 30s",v:"mid 30s"},
+  {label:"40s",v:"40s"},{label:"50s",v:"50s"},{label:"60s",v:"60s"},{label:"Elderly",v:"elderly"},
+];
+const SUBJ_ETHNICITY=[
+  {label:"East Asian",v:"East Asian"},{label:"Southeast Asian",v:"Southeast Asian"},
+  {label:"South Asian",v:"South Asian"},{label:"Black",v:"Black"},
+  {label:"Afro-Latina",v:"Afro-Latina"},{label:"Latina",v:"Latina"},
+  {label:"Middle Eastern",v:"Middle Eastern"},{label:"North African",v:"North African"},
+  {label:"White / European",v:"White European"},{label:"Scandinavian",v:"Scandinavian"},
+  {label:"Mixed",v:"mixed ethnicity"},
+];
+const SUBJ_BUILD=[
+  {label:"Very slim",v:"very slim"},{label:"Slim",v:"slim"},
+  {label:"Lean / athletic",v:"lean athletic"},{label:"Muscular",v:"muscular"},
+  {label:"Average",v:"average build"},{label:"Curvy",v:"curvy"},
+  {label:"Plus size",v:"plus size"},{label:"Petite",v:"petite"},
+  {label:"Tall and lean",v:"tall and lean"},{label:"Short and stocky",v:"short and stocky"},
+];
+const SUBJ_HAIR_LEN=[
+  {label:"Buzzed / shaved",v:"buzzed"},{label:"Very short",v:"very short"},
+  {label:"Short",v:"short"},{label:"Ear length",v:"ear-length"},
+  {label:"Shoulder length",v:"shoulder-length"},{label:"Mid-back",v:"mid-back length"},
+  {label:"Very long",v:"very long"},{label:"Waist length",v:"waist-length"},
+];
+const SUBJ_HAIR_TEX=[
+  {label:"Straight",v:"straight"},{label:"Wavy",v:"wavy"},
+  {label:"Loose curls",v:"loosely curled"},{label:"Tight curls",v:"tightly curled"},
+  {label:"Coily",v:"coily"},{label:"Kinky",v:"kinky"},
+];
+const SUBJ_HAIR_STYLE=[
+  {label:"Down and loose",v:"worn loose and down"},{label:"Messy bun",v:"in a messy bun"},
+  {label:"Sleek updo",v:"in a sleek updo"},{label:"High ponytail",v:"in a high ponytail"},
+  {label:"Low ponytail",v:"in a low ponytail"},{label:"Braids",v:"in braids"},
+  {label:"Locs",v:"in locs"},{label:"Cornrows",v:"in cornrows"},
+  {label:"Pigtails",v:"in pigtails"},{label:"Half up half down",v:"half up half down"},
+  {label:"Slicked back",v:"slicked back"},{label:"Tousled / bedhead",v:"tousled and bedhead"},
+  {label:"Curtain bangs",v:"with curtain bangs"},{label:"Side swept",v:"side swept"},
+];
+const COLORS=[
+  {label:"Black",v:"black",hex:"#181818"},{label:"Dark brown",v:"dark brown",hex:"#3d1f00"},
+  {label:"Brown",v:"medium brown",hex:"#7b4b2a"},{label:"Auburn",v:"auburn",hex:"#9e3515"},
+  {label:"Dirty blonde",v:"dirty blonde",hex:"#c9a535"},{label:"Blonde",v:"blonde",hex:"#e8c840"},
+  {label:"Platinum",v:"platinum blonde",hex:"#e8e8e0"},{label:"Grey",v:"grey",hex:"#909090"},
+  {label:"White",v:"white",hex:"#e8e8e8"},{label:"Vivid red",v:"vivid red",hex:"#cc2020"},
+  {label:"Hot pink",v:"hot pink",hex:"#ff4d9e"},{label:"Purple",v:"deep purple",hex:"#7020c0"},
+  {label:"Blue",v:"electric blue",hex:"#0080ff"},{label:"Green",v:"bright green",hex:"#00bb44"},
+  {label:"Teal",v:"teal",hex:"#008878"},{label:"Orange",v:"vivid orange",hex:"#ff6600"},
+  {label:"Multicolor",v:"multicolor rainbow ombre",hex:"linear-gradient(90deg,#ff4d9e,#ff6600,#e8c840,#00bb44,#0080ff,#7020c0)"},
+];
+const SUBJ_OUTFIT=[
+  {label:"Streetwear",v:"streetwear outfit"},{label:"High fashion editorial",v:"high fashion editorial outfit"},
+  {label:"Luxury casual",v:"luxury casual outfit"},{label:"Formal / business",v:"formal business attire"},
+  {label:"Ball gown",v:"ball gown"},{label:"Suit",v:"tailored suit"},
+  {label:"Uniform",v:"uniform"},{label:"Athletic / sportswear",v:"athletic sportswear"},
+  {label:"Swimwear",v:"swimwear"},{label:"Fantasy armor",v:"fantasy armor"},
+  {label:"Fantasy robes",v:"fantasy robes"},{label:"Sci-fi suit",v:"futuristic sci-fi suit"},
+  {label:"Cyberpunk",v:"cyberpunk outfit"},{label:"School uniform",v:"school uniform"},
+  {label:"Military",v:"military outfit"},{label:"Vintage 50s",v:"vintage 1950s outfit"},
+  {label:"Vintage 70s",v:"vintage 1970s outfit"},{label:"Vintage 90s",v:"vintage 1990s outfit"},
+  {label:"Workwear / utility",v:"workwear utility outfit"},{label:"Monochrome",v:"monochrome outfit"},
+  {label:"Minimalist",v:"minimalist outfit"},{label:"Avant-garde",v:"avant-garde fashion"},
+];
+const SUBJ_POSE=[
+  {label:"Standing straight",v:"standing upright with straight posture"},
+  {label:"Standing relaxed",v:"standing relaxed, weight shifted to one side"},
+  {label:"Hands in pockets",v:"standing with both hands in pockets"},
+  {label:"Arms crossed",v:"standing with arms crossed"},
+  {label:"Facing camera",v:"facing directly toward the camera"},
+  {label:"Three-quarter turn",v:"turned at a three-quarter angle to the camera"},
+  {label:"Turned away",v:"turned fully away from the camera"},
+  {label:"Walking toward",v:"walking toward the camera, mid-stride"},
+  {label:"Walking away",v:"walking away from the camera"},
+  {label:"Running toward",v:"running toward the camera"},
+  {label:"Running away",v:"running urgently away from the camera"},
+  {label:"Sprinting hard",v:"sprinting at full speed, motion blur, intense urgency"},
+  {label:"Jumping",v:"jumping in the air, suspended mid-leap"},
+  {label:"Crouching",v:"crouching low to the ground"},
+  {label:"Sitting — legs crossed",v:"sitting cross-legged on the ground"},
+  {label:"Sitting — leaning forward",v:"sitting and leaning forward with elbows on knees"},
+  {label:"Sitting — leaning back",v:"sitting and leaning back, relaxed"},
+  {label:"Sitting on ground",v:"sitting casually on the ground"},
+  {label:"Lying down",v:"lying down, resting"},
+  {label:"Looking over shoulder",v:"looking back over their shoulder at the camera"},
+  {label:"Mid-dance",v:"mid-dance, dynamic movement, body in motion"},
+  {label:"Reaching out",v:"reaching one hand out toward the camera"},
+  {label:"Kneeling",v:"kneeling on one knee"},
+  {label:"Climbing",v:"climbing upward, hands gripping a surface"},
+];
+// ─── VISUAL QUALITY
+const VISUAL_QUALITY={
+  "Photographic":[
+    {label:"Photorealistic",v:"photorealistic, indistinguishable from a real photograph"},
+    {label:"Hyperrealistic",v:"hyperrealistic, ultra-sharp detail, every surface rendered precisely"},
+    {label:"Film photography",v:"shot on 35mm film, analog grain, warm color shift, slightly imperfect"},
+    {label:"Documentary / raw",v:"raw documentary photography, unpolished, authentic, handheld feel"},
+    {label:"Noir",v:"noir photography, high contrast black and white, deep dramatic shadows"},
+    {label:"Infrared",v:"infrared photography, alien glowing whites, surreal color inversion"},
+    {label:"Long exposure",v:"long exposure photography, motion blur, light trails, time compression"},
+    {label:"Double exposure",v:"double exposure, two scenes merged and layered together"},
+  ],
+  "Illustrated":[
+    {label:"Pencil sketch",v:"detailed pencil sketch, hand-drawn graphite lines, visible hatching"},
+    {label:"Ink drawing",v:"bold ink illustration, expressive brushwork linework, high contrast"},
+    {label:"Charcoal",v:"charcoal drawing, dark smudged texture, dramatic tonal range"},
+    {label:"Watercolor",v:"watercolor painting, soft bleeding edges, luminous color washes"},
+    {label:"Oil painting",v:"oil painting, thick impasto brushwork, rich classical color palette"},
+    {label:"Acrylic painting",v:"acrylic painting, bold flat color, modern painterly texture"},
+    {label:"Digital painting",v:"polished digital painting, concept art quality, detailed render"},
+    {label:"Poster / flat art",v:"bold graphic poster art, flat colors, strong silhouettes, limited palette"},
+    {label:"Linocut / woodblock",v:"linocut print style, bold carved lines, rough texture, limited color"},
+    {label:"Screen print",v:"screen print style, flat color layers, slight ink texture, retro feel"},
+  ],
+  "Anime & Comic":[
+    {label:"Soft anime",v:"soft anime illustration, smooth skin texture, delicate shading, clean refined linework"},
+    {label:"Gritty anime",v:"gritty anime style, bold heavy lines, high contrast, dynamic composition"},
+    {label:"Manga",v:"black and white manga style, screen tones, expressive linework, dramatic angles"},
+    {label:"Webtoon",v:"webtoon illustration style, clean digital linework, modern Korean manhwa aesthetic"},
+    {label:"Western comic",v:"western comic book style, bold color blocking, graphic ink shadows, hero proportions"},
+    {label:"Cartoon",v:"cartoon style, simplified shapes, exaggerated proportions, bright colors"},
+    {label:"Exaggerated",v:"exaggerated proportions, oversized expressive features, hyper-stylized"},
+    {label:"Chibi / super deformed",v:"chibi super-deformed style, oversized head, tiny body, cute exaggeration"},
+  ],
+  "Graphic & Geometric":[
+    {label:"Flat design",v:"flat design, minimal, no shadows or gradients, clean graphic shapes"},
+    {label:"Low poly / geometric",v:"low poly geometric style, angular faceted shapes, triangulated surfaces"},
+    {label:"Stained glass",v:"stained glass style, leaded geometric color panels, jewel-tone colors"},
+    {label:"Mosaic",v:"mosaic tile style, small colored tiles forming the whole image"},
+    {label:"Vector graphic",v:"clean vector graphic style, smooth paths, pure flat color areas"},
+    {label:"Collage",v:"photographic collage, cut-and-paste layered textures, mixed media feel"},
+  ],
+  "Surreal & Dark":[
+    {label:"Hallucinatory",v:"hallucinatory, reality warping, impossible geometry, fever dream logic, mind-bending"},
+    {label:"Surrealist",v:"surrealist, dreamlike melting reality, impossible physics, Dalí-esque"},
+    {label:"Psychedelic",v:"psychedelic, intense saturated swirling colors, fractal patterns, kaleidoscopic"},
+    {label:"Glitch art",v:"glitch art aesthetic, digital corruption, pixel distortion, RGB channel separation"},
+    {label:"Abstract expressionist",v:"abstract expressionist, emotional gestural marks, non-representational energy"},
+    {label:"Dark fantasy painted",v:"dark fantasy illustration, intricate painted detail, ominous foreboding atmosphere"},
+    {label:"Gothic illustrated",v:"gothic illustration style, ornate dark detail, Victorian engraving quality"},
+  ],
+  "CGI & 3D":[
+    {label:"CGI rendered",v:"CGI rendered, physically based materials, ray traced lighting, global illumination"},
+    {label:"Octane / Unreal Engine",v:"Octane Render, Unreal Engine 5, hyperrealistic CGI, photorealistic materials"},
+    {label:"Clay render",v:"clay render, matte smooth clay-like surfaces, soft diffused lighting"},
+    {label:"3D animated",v:"3D animation style, smooth polished surfaces, Pixar-quality rendering"},
+    {label:"Holographic / neon",v:"holographic neon aesthetic, glowing translucent surfaces, iridescent light"},
+    {label:"Miniature / tilt-shift",v:"tilt-shift miniature effect, selective focus planes, toy-like scale illusion"},
+    {label:"Stop motion",v:"stop motion animation aesthetic, textured handmade physical feel"},
+  ],
+  "Aesthetic & Tone":[
+    {label:"Cottagecore",v:"cottagecore aesthetic, natural textures, warm golden sunlight, botanical detail"},
+    {label:"Solarpunk",v:"solarpunk aesthetic, living plant-covered structures, warm optimistic light"},
+    {label:"Lo-fi nostalgic",v:"lo-fi nostalgic aesthetic, retro technology, faded warm film tones, quiet solitude"},
+    {label:"Dark academia",v:"dark academia aesthetic, candlelight, dark polished wood, intellectual brooding"},
+    {label:"Y2K retro",v:"Y2K retro aesthetic, early 2000s palette, plastic surfaces, oversaturated"},
+    {label:"Dreamcore",v:"dreamcore aesthetic, hazy soft focus, floating surreal warmth, barely-real"},
+    {label:"Cozy kawaii",v:"cozy kawaii aesthetic, soft pastel colors, cute decorative objects, warm gentle light"},
+    {label:"Cyberpunk neon",v:"cyberpunk neon aesthetic, electric neon color palette, rain-slicked reflective surfaces"},
+    {label:"Golden futurism",v:"golden futurism aesthetic, warm copper and amber tones, iridescent pearlescent highlights"},
+    {label:"Cold sci-fi",v:"cold sci-fi aesthetic, desaturated blue-grey palette, clinical precision, hard directed light"},
+    {label:"Film noir",v:"film noir aesthetic, deep dramatic shadow play, black and grey palette, mystery and tension"},
+    {label:"Vintage americana",v:"vintage americana aesthetic, warm retro mid-century color palette, Kodachrome feel"},
+    {label:"80s neon retro",v:"1980s neon retro aesthetic, hot pink and electric blue, synthwave color palette"},
+    {label:"Horror",v:"horror aesthetic, oppressive suffocating darkness, unsettling foreground detail, dread"},
+    {label:"Epic fantasy",v:"epic high fantasy aesthetic, painted mythic scale, dramatic supernatural light"},
+    {label:"Wuxia / ink wash",v:"wuxia ink wash aesthetic, flowing brushwork, mist and mountain, traditional East Asian"},
+  ],
+};
+
+const SUBJ_EXPRESSION=[
+  {label:"Confident",v:"confident"},{label:"Fierce / intense",v:"fierce and intense"},
+  {label:"Mysterious",v:"mysterious and enigmatic"},{label:"Cool / unbothered",v:"cool and unbothered"},
+  {label:"Seductive",v:"seductive"},{label:"Joyful / laughing",v:"joyful and laughing"},
+  {label:"Smiling softly",v:"smiling softly"},{label:"Playful",v:"playful and mischievous"},
+  {label:"Excited",v:"excited and energetic"},{label:"Surprised",v:"surprised"},
+  {label:"Sad",v:"sad and downcast"},{label:"Melancholic",v:"melancholic and introspective"},
+  {label:"Vulnerable",v:"vulnerable and emotional"},{label:"Scared",v:"scared and fearful"},
+  {label:"Tense / nervous",v:"tense and nervous"},{label:"Angry",v:"angry and furious"},
+  {label:"Defiant",v:"defiant and rebellious"},{label:"Dreamy / distant",v:"dreamy and distant"},
+  {label:"In thought",v:"deep in thought, contemplative"},{label:"Serene / peaceful",v:"serene and peaceful"},
+  {label:"Exhausted",v:"exhausted and worn down"},{label:"Determined",v:"determined and focused"},
+  {label:"Commanding",v:"commanding and authoritative"},
 ];
 
 // ─── SETTINGS
@@ -87,88 +269,6 @@ const SETTINGS={
   ],
 };
 
-// ─── PHOTO STYLES
-const PHOTO_STYLES=[
-  {label:"Candid — unposed, life happening naturally",v:"candid street photography, natural unposed moment"},
-  {label:"Golden hour portrait — warm backlit, long shadows",v:"golden hour photography, warm backlit glow, soft long shadows"},
-  {label:"Documentary — raw, journalistic, truth-first",v:"documentary-style color photograph, raw journalistic feel"},
-  {label:"Editorial — clean, composed, magazine quality",v:"editorial photography, clean composition, professional quality"},
-  {label:"Night photography — artificial glow, city light",v:"night photography, artificial light sources, long exposure depth"},
-  {label:"Black & white — monochrome, timeless, heavy",v:"black and white photograph, high contrast monochrome"},
-  {label:"35mm film — grain, warm tones, analog feel",v:"shot on 35mm film, visible grain, warm analog tones, slightly imperfect"},
-  {label:"Aerial / drone — looking down from high above",v:"aerial drone photography from high above looking down"},
-];
-
-// ─── CINEMATIC STYLES
-const CINEMATIC_STYLES=[
-  {label:"Epic wide shot — massive scale, sweeping view",v:"ultra photorealistic cinematic wide angle establishing shot"},
-  {label:"High vantage — looking down over the world below",v:"ultra photorealistic cinematic view from a high vantage point overlooking"},
-  {label:"Ground level — immersive, camera pushing forward",v:"cinematic ground-level immersive shot, camera slowly pushing forward"},
-  {label:"Golden futurism — warm copper and gold, opulent",v:"cinematic golden hour atmosphere, copper and gold tones, iridescent highlights, pearlescent reflections, delicate haze"},
-  {label:"Cold sci-fi — blue-grey, clinical, technological",v:"cold cinematic sci-fi atmosphere, blue-grey tones, hard clinical light"},
-  {label:"Gritty realism — textured, grounded, authentic",v:"gritty photorealistic cinematic style, textured surfaces, authentic lighting"},
-];
-const RENDER_QUALITY=[
-  {label:"Photorealistic — indistinguishable from a real photograph",v:"high definition photorealistic, not illustration, not painting, not concept art"},
-  {label:"CGI rendered — Octane, Unreal Engine quality",v:"Hyperrealistic CGI, Octane Render, Unreal Engine, physically based materials, ray traced reflections, global illumination"},
-  {label:"IMAX large format — top-tier cinematic camera quality",v:"IMAX film still, ARRI Alexa 65, Hasselblad medium format style"},
-  {label:"Cinematic concept art — polished production design",v:"high quality cinematic concept art, production design quality"},
-];
-
-// ─── ILLUSTRATED STYLES
-const ILLUS_STYLES=[
-  {label:"Soft anime — smooth skin, delicate, gentle colors",v:"soft anime illustration style with semi-realistic facial rendering, smooth skin texture, delicate shading, fine detailed hair strands, clean and refined linework, translucent highlights"},
-  {label:"Gritty manga — bold lines, high contrast, dynamic",v:"gritty manga illustration style, bold ink lines, high contrast, dynamic composition"},
-  {label:"Studio Ghibli — painterly, natural warmth, whimsy",v:"Studio Ghibli inspired illustration style, painterly backgrounds, natural warm light, whimsical atmosphere"},
-  {label:"Webtoon / K-manhwa — clean, modern digital line art",v:"webtoon illustration style, clean digital linework, modern Korean manhwa aesthetic"},
-  {label:"Western comic — bold colors, graphic shadows",v:"western comic book illustration style, bold color blocking, graphic ink shadows"},
-  {label:"Oil painting — thick brushwork, rich and classical",v:"oil painting style, visible thick impasto brushwork, rich classical color palette"},
-  {label:"Watercolor — soft edges, luminous, loose",v:"watercolor illustration style, soft bleeding edges, luminous transparent color washes"},
-  {label:"Digital painting — polished, detailed, concept art",v:"detailed digital painting, polished illustration, concept art quality"},
-];
-const ILLUS_RENDERING=[
-  {label:"Hyper detailed — every surface rendered precisely",v:"intricate fine detail, highly rendered surfaces, meticulous texture work"},
-  {label:"Semi-realistic — stylized but grounded",v:"semi-realistic rendering, stylized proportions with real-world light logic"},
-  {label:"Slightly dreamy — soft focus, warm atmosphere",v:"slightly dreamy atmosphere, soft focus, warm subtle glow"},
-  {label:"Stylized and graphic — reduced detail, clean",v:"stylized flat rendering, graphic clean shapes, reduced detail"},
-];
-
-// ─── DARK ART STYLES
-const DARK_STYLES=[
-  {label:"Dark fantasy painted — detailed, ominous, medieval",v:"intricate dark fantasy illustration, highly detailed painted style, ominous atmosphere"},
-  {label:"Graphic horror — red accents, skulls, bold lines",v:"dark graphic horror artwork, dominant red and grayscale palette, bold dramatic linework, skulls and bones"},
-  {label:"Surreal dreamscape — impossible, melting, wrong",v:"surreal dreamscape artwork, impossible physics, melting reality, dreamlike broken logic"},
-  {label:"Gothic atmosphere — Victorian, candles, shadow",v:"gothic atmospheric illustration, Victorian shadows, candlelight, dark ornate architectural detail"},
-  {label:"Noir illustrated — shadow play, black and grey",v:"noir-style illustration, dramatic shadow play, black and deep grey palette"},
-  {label:"Cosmic horror — vast, ancient, unknowable darkness",v:"cosmic horror illustration, vast unknowable darkness, ancient malevolent scale, incomprehensible geometry"},
-];
-const DARK_PALETTE=[
-  {label:"Blood red + black — violent and powerful",v:"dominant blood red and black color palette, single vivid accent against darkness"},
-  {label:"Deep purple + shadow — mysterious, magical",v:"deep purple and dark shadow palette, mysterious and magical atmosphere"},
-  {label:"Cold grey monochrome — bleak, heavy, lifeless",v:"cold grey monochrome palette, bleak and heavy, desaturated"},
-  {label:"Sickly green + black — toxic and corrupted",v:"sickly green and black palette, toxic corrupted atmosphere"},
-  {label:"Ash and ember — burnt, post-collapse, ruins",v:"ash grey and glowing ember color palette, post-apocalyptic and burnt"},
-];
-
-// ─── VIBE STYLES
-const VIBE_STYLES=[
-  {label:"Cozy kawaii — soft pastels, cute objects, warm light",v:"cozy kawaii aesthetic, soft pastel colors, cute decorative objects, warm gentle light"},
-  {label:"Lo-fi nostalgic — retro tech, faded warm tones",v:"lo-fi nostalgic aesthetic, retro technology, faded warm film tones, quiet solitude"},
-  {label:"Cottagecore — flowers, sunlight, natural materials",v:"cottagecore aesthetic, wildflowers, natural timber and linen textures, golden sunlight"},
-  {label:"Y2K retro — early 2000s, plastic, saturated",v:"Y2K retro aesthetic, early 2000s color palette, plastic surfaces, saturated tones"},
-  {label:"Dreamcore — hazy, soft, floating, barely real",v:"dreamcore aesthetic, hazy soft focus, floating surreal elements, warm barely-real quality"},
-  {label:"Dark academia — books, candles, wood, brooding",v:"dark academia aesthetic, leather-bound books, candlelight, dark polished wood, intellectual brooding"},
-  {label:"Solarpunk — plants on buildings, hopeful light",v:"solarpunk aesthetic, living plant-covered architecture, warm optimistic light, green and gold"},
-];
-const VIBE_TEXTURE=[
-  {label:"String lights — warm yellow dots everywhere",v:"warm string lights casting mottled golden glow and shadow on the walls"},
-  {label:"Lens flare — light bleeds into camera, dreamy",v:"soft prismatic lens flare, light bleeding gently into the frame"},
-  {label:"Film grain — analog warmth, slightly imperfect",v:"subtle film grain, analog warmth, slightly imperfect exposure"},
-  {label:"Soap bubbles — floating iridescent spheres",v:"iridescent soap bubbles drifting slowly through the air, catching rainbow light"},
-  {label:"Dust motes — particles in shafts of light",v:"visible dust motes floating in shafts of warm light"},
-  {label:"Rain on glass — blurred bokeh, safe inside",v:"rain drops on glass, soft blurred bokeh beyond, safe dry feeling inside"},
-  {label:"Fairy light bokeh — soft glowing circles",v:"fairy light bokeh, soft glowing circles of warm light in the background"},
-];
 
 // ─── MOODS
 const MOODS=[
@@ -221,76 +321,63 @@ const RATIOS=[
 ];
 
 // ─── PROMPT ASSEMBLY
-function buildPrompt({mode,subject,settingObj,styleObj,style2Obj,moodObj,timeObj,cameraObj,ratio,stylize,custom}){
+function buildSubject(sg,sgender,sage,seth,sbuild,shlen,shtex,shstyle,shcolor,soutfit,soutfitcolor,spose,sexp){
+  if(!sg||sg==="none") return "";
+  if(sg==="packed") return "a massive packed crowd of people, hundreds of figures filling every inch of the frame";
+  if(sg==="crowd") return "a large crowd of people";
+  if(sg==="group") return "a small group of people (3-5)";
+  if(sg==="two"){
+    const bits=["two people"];
+    if(spose) bits.push(spose);
+    if(sexp) bits.push(sexp);
+    return bits.join(", ");
+  }
+  // Solo
+  const parts=[];
+  const youngAges=["toddler","child","pre-teen","teenager"];
+  const buildStr=sbuild?`${sbuild} `:"";
+  const ethStr=seth?`${seth} `:"";
+  const genderStr=sgender||"person";
+  if(youngAges.includes(sage)) parts.push(`a ${buildStr}${ethStr}${genderStr} who is a ${sage}`);
+  else{
+    parts.push(`a ${buildStr}${ethStr}${genderStr}`);
+    if(sage) parts.push(`in their ${sage}`);
+  }
+  // Hair
+  if(shlen==="buzzed"){
+    parts.push("with a buzzed shaved head");
+  } else if(shlen||shtex||shstyle||shcolor){
+    const lenStr=shlen?`${shlen} `:"";
+    const texStr=shtex?`${shtex} `:"";
+    const colorStr=shcolor?`${shcolor} `:"";
+    const styleStr=shstyle?` ${shstyle}`:"";
+    parts.push(`with ${colorStr}${lenStr}${texStr}hair${styleStr}`);
+  }
+  // Outfit
+  if(soutfit||soutfitcolor){
+    const colorStr=soutfitcolor?`${soutfitcolor} `:"";
+    const outfitStr=soutfit||"clothing";
+    parts.push(`wearing ${colorStr}${outfitStr}`);
+  }
+  if(spose) parts.push(spose);
+  if(sexp) parts.push(sexp);
+  return parts.filter(Boolean).join(", ");
+}
+
+function buildPrompt({subject,settingObj,quality,moodObj,timeObj,cameraObj,ratio,stylize,custom}){
   const p=[];
-  const sv = settingObj ? settingObj.v : "";
-  // Subject gets wrapped in a scene-leading phrase so it reads as the focal point
-  const subjectPhrase = subject ? `featuring ${subject}` : "";
-  const camV = cameraObj ? cameraObj.v : "";
-
-  if(mode==="photo"){
-    const st = styleObj ? styleObj.v : "a color photograph";
-    p.push(st);
-    if(subject) p.push(`of ${subject}`);
-    if(sv) p.push(sv);
-    if(timeObj) p.push(timeObj.v);
-    if(camV) p.push(camV);
-    if(moodObj) p.push(moodObj.v);
-    if(custom) p.push(custom);
-    p.push("natural depth of field, realistic proportions");
-  }
-  if(mode==="cinematic"){
-    const st = styleObj ? styleObj.v : "ultra photorealistic cinematic wide angle shot";
-    p.push(st);
-    if(sv) p.push(sv);
-    if(subjectPhrase) p.push(subjectPhrase);
-    if(timeObj) p.push(timeObj.v);
-    if(camV) p.push(camV);
-    if(moodObj) p.push(moodObj.v);
-    if(custom) p.push(custom);
-    p.push("emphasizing the monumental scale");
-    const r2 = style2Obj ? style2Obj.v : "Hyperrealistic CGI, Octane Render, Unreal Engine, physically based materials, ray traced reflections, global illumination";
-    p.push(r2);
-  }
-  if(mode==="illustrated"){
-    const st = styleObj ? styleObj.v : "detailed digital illustration";
-    p.push(st);
-    if(style2Obj) p.push(style2Obj.v);
-    // Subject is the main event in illustrated — put it front and center after style
-    if(subject) p.push(subject);
-    if(sv) p.push(sv);
-    if(timeObj) p.push(timeObj.v);
-    if(camV) p.push(camV);
-    if(moodObj) p.push(moodObj.v);
-    if(custom) p.push(custom);
-    p.push("gentle ambient lighting, natural warm color palette");
-  }
-  if(mode==="dark"){
-    const st = styleObj ? styleObj.v : "intricate dark fantasy artwork";
-    p.push(st);
-    if(style2Obj) p.push(style2Obj.v);
-    if(subject) p.push(subject);
-    if(sv) p.push(sv);
-    if(timeObj) p.push(timeObj.v);
-    if(camV) p.push(camV);
-    if(moodObj) p.push(moodObj.v);
-    if(custom) p.push(custom);
-    p.push("dramatic chiaroscuro lighting, deeply detailed and richly textured");
-  }
-  if(mode==="vibe"){
-    const st = styleObj ? styleObj.v : "cozy aesthetic scene";
-    p.push(st);
-    if(style2Obj) p.push(style2Obj.v);
-    if(subjectPhrase) p.push(subjectPhrase);
-    if(sv) p.push(sv);
-    if(timeObj) p.push(timeObj.v);
-    if(camV) p.push(camV);
-    if(moodObj) p.push(moodObj.v);
-    if(custom) p.push(custom);
-    p.push("soft dreamy atmosphere, gentle color palette");
-  }
-
-  const filled = p.filter(x=>x&&x.trim());
+  const sv=settingObj?settingObj.v:"";
+  const camV=cameraObj?cameraObj.v:"";
+  const qualStr=quality&&quality.length?quality.join(", "):"";
+  // MidJourney reads left to right — style/medium first, then subject, then world, then light, then mood, then camera
+  if(qualStr) p.push(qualStr);
+  if(subject) p.push(subject);
+  if(sv) p.push(sv);
+  if(timeObj) p.push(timeObj.v);
+  if(moodObj) p.push(moodObj.v);
+  if(camV) p.push(camV);
+  if(custom) p.push(custom);
+  const filled=p.filter(x=>x&&x.trim());
   if(!filled.length) return "";
   return filled.join(", ")+" --v 7 --ar "+ratio+" --s "+stylize;
 }
@@ -384,6 +471,19 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:13px;heigh
 ::-webkit-scrollbar{width:3px;}
 ::-webkit-scrollbar-track{background:transparent;}
 ::-webkit-scrollbar-thumb{background:var(--bdH);border-radius:2px;}
+
+/* subject builder */
+.subrows{display:flex;flex-direction:column;gap:0.65rem;}
+.subrow{}
+.subrow-lbl{font-family:'JetBrains Mono',monospace;font-size:0.48rem;letter-spacing:0.12em;text-transform:uppercase;color:var(--di);margin-bottom:0.28rem;}
+.cpills{display:flex;flex-wrap:wrap;gap:0.28rem;}
+.cpill{display:flex;align-items:center;gap:0.32rem;padding:0.22rem 0.5rem 0.22rem 0.28rem;border:1px solid var(--bdH);background:transparent;color:var(--mu);font-family:'Rajdhani',sans-serif;font-size:0.72rem;font-weight:500;border-radius:2px;cursor:pointer;transition:all 0.12s;white-space:nowrap;}
+.cpill:hover{border-color:var(--pri);color:var(--pri);}
+.cpill.on{border-color:var(--pri);background:var(--priG);color:var(--pri);box-shadow:0 0 8px var(--priG);}
+.cdot{width:10px;height:10px;border-radius:50%;flex-shrink:0;border:1px solid rgba(255,255,255,0.18);}
+.subj-preview{font-family:'JetBrains Mono',monospace;font-size:0.58rem;color:var(--secD);background:var(--bgI);border:1px solid var(--bd);border-radius:2px;padding:0.45rem 0.65rem;margin-top:0.5rem;line-height:1.5;min-height:32px;word-break:break-word;}
+.subj-preview-empty{color:var(--di);font-style:italic;}
+.subj-divider{height:1px;background:var(--bd);margin:0.5rem 0;}
 `;
 
 // ─── COMPONENTS
@@ -395,44 +495,46 @@ function PillGroup({items,val,onToggle}){return <div className="pills">{items.ma
 // ─── APP
 function App(){
   const [theme,  setTheme]  = useState("cyber");
-  const [mode,   setMode]   = useState("photo");
-  const [subj,   setSubj]   = useState("");
+  const [sg,     setSg]     = useState(null);
+  const [sgender,setSgender]= useState(null);
+  const [sage,   setSage]   = useState(null);
+  const [seth,   setSeth]   = useState(null);
+  const [sbuild, setSbuild] = useState(null);
+  const [shlen,  setShlen]  = useState(null);
+  const [shtex,  setShtex]  = useState(null);
+  const [shstyle,setShstyle]= useState(null);
+  const [shcolor,setShcolor]= useState(null);
+  const [soutfit,setSoutfit]= useState(null);
+  const [soutfitcolor,setSoutfitcolor]= useState(null);
+  const [spose,  setSpose]  = useState(null);
+  const [sexp,   setSexp]   = useState(null);
   const [scat,   setScat]   = useState("City");
   const [sval,   setSval]   = useState("");
-  const [style,  setStyle]  = useState(null);
-  const [style2, setStyle2] = useState(null);
   const [mood,   setMood]   = useState(null);
   const [time,   setTime]   = useState(null);
   const [cam,    setCam]    = useState(null);
   const [ratio,  setRatio]  = useState("16:9");
   const [styl,   setStyl]   = useState(250);
   const [custom, setCustom] = useState("");
+  const [qualCat,setQualCat]= useState("Photographic");
+  const [qualSels,setQualSels]= useState([]);
   const [copied, setCopied] = useState(false);
 
   const T=THEMES[theme];
   const vars={"--bg":T.bg,"--bgI":T.bgI,"--bd":T.bd,"--bdH":T.bdH,"--pb":T.pb,"--pri":T.pri,"--priG":T.priG,"--sec":T.sec,"--secD":T.secD,"--secG":T.secG,"--tx":T.tx,"--mu":T.mu,"--di":T.di,"--pt":T.pt,"--gc":T.gc,"--hl":T.hl,"--sa":T.sa};
   const arrCSS=`select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='8' height='5' viewBox='0 0 8 5'%3E%3Cpath d='M0 0l4 5 4-5z' fill='${T.ah}' opacity='0.9'/%3E%3C/svg%3E");}`;
 
-  const stylePool  = mode==="photo"?PHOTO_STYLES:mode==="cinematic"?CINEMATIC_STYLES:mode==="illustrated"?ILLUS_STYLES:mode==="dark"?DARK_STYLES:VIBE_STYLES;
-  const style2Pool = mode==="cinematic"?RENDER_QUALITY:mode==="illustrated"?ILLUS_RENDERING:mode==="dark"?DARK_PALETTE:VIBE_TEXTURE;
-  const show2      = mode!=="photo";
-
-  const styleL2 = {cinematic:"Render Quality",illustrated:"Rendering Detail",dark:"Color Palette",vibe:"Texture & Light"}[mode]||"";
-  const styleL1 = {photo:"Photo Style",cinematic:"Cinematic Framing",illustrated:"Art Style",dark:"Dark Art Style",vibe:"Aesthetic"}[mode];
-
   const settingObj = useMemo(()=>Object.values(SETTINGS).flat().find(x=>x.v===sval)||null,[sval]);
-  const styleObj   = useMemo(()=>stylePool.find(x=>x.v===style)||null,[style,stylePool]);
-  const style2Obj  = useMemo(()=>style2Pool.find(x=>x.v===style2)||null,[style2,style2Pool]);
   const moodObj    = useMemo(()=>MOODS.find(x=>x.v===mood)||null,[mood]);
   const timeObj    = useMemo(()=>TIMES.find(x=>x.v===time)||null,[time]);
   const camObj     = useMemo(()=>CAMERAS.find(x=>x.v===cam)||null,[cam]);
 
-  const prompt = useMemo(()=>buildPrompt({mode,subject:subj,settingObj,styleObj,style2Obj,moodObj,timeObj,cameraObj:camObj,ratio,stylize:styl,custom}),[mode,subj,settingObj,styleObj,style2Obj,moodObj,timeObj,camObj,ratio,styl,custom]);
+  const builtSubject = useMemo(()=>buildSubject(sg,sgender,sage,seth,sbuild,shlen,shtex,shstyle,shcolor,soutfit,soutfitcolor,spose,sexp),[sg,sgender,sage,seth,sbuild,shlen,shtex,shstyle,shcolor,soutfit,soutfitcolor,spose,sexp]);
+  const prompt = useMemo(()=>buildPrompt({subject:builtSubject,settingObj,moodObj,timeObj,cameraObj:camObj,quality:qualSels,ratio,stylize:styl,custom}),[builtSubject,settingObj,moodObj,timeObj,camObj,qualSels,ratio,styl,custom]);
 
   const promptScene  = prompt?prompt.replace(/\s--.*$/s,""):"";
   const promptParams = prompt?(prompt.match(/\s(--.*)$/s)?.[1]||""):"";
 
-  const changeMode=(m)=>{setMode(m);setStyle(null);setStyle2(null);};
   const changeScat=(c)=>{setScat(c);setSval("");};
 
   const copy=async()=>{
@@ -441,15 +543,9 @@ function App(){
     setCopied(true);setTimeout(()=>setCopied(false),2200);
   };
 
-  const reset=()=>{setSubj("");setSval("");setStyle(null);setStyle2(null);setMood(null);setTime(null);setCam(null);setRatio("16:9");setStyl(250);setCustom("");};
+  const reset=()=>{setSg(null);setSgender(null);setSage(null);setSeth(null);setSbuild(null);setShlen(null);setShtex(null);setShstyle(null);setShcolor(null);setSoutfit(null);setSoutfitcolor(null);setSpose(null);setSexp(null);setSval("");setMood(null);setTime(null);setCam(null);setQualCat("Photographic");setQualSels([]);setRatio("16:9");setStyl(250);setCustom("");};
 
-  const placeholder={
-    photo:"e.g. a woman in her 30s walking a golden retriever, red raincoat, shot from behind",
-    cinematic:"e.g. streams of people in futuristic clothing crossing polished metallic forecourts",
-    illustrated:"e.g. a high-school boy holding an iced coffee, bandages on his fingers, frog keychain",
-    dark:"e.g. a robed figure standing at a crossroads, skulls at the base of dead trees around them",
-    vibe:"e.g. a vintage CRT TV playing a cartoon, posters pinned to the walls, a sleeping cat",
-  }[mode];
+
 
   return <>
     <style>{CSS}</style>
@@ -472,40 +568,121 @@ function App(){
         </div>
       </div>
 
-      <div className="mode-bar">
-        {MODES.map(m=>(
-          <button key={m.id} className={`mb ${mode===m.id?"on":""}`} onClick={()=>changeMode(m.id)}>
-            <span className="mb-icon">{m.icon}</span>
-            <span className="mb-txt">
-              <span className="mb-name">{m.label}</span>
-              <span className="mb-sub">{m.sub}</span>
-            </span>
-          </button>
-        ))}
-      </div>
-
       <div className="reset-bar">
         <button className="reset-btn" onClick={reset}>↺ Reset</button>
       </div>
 
       <div className="sections">
 
-        {/* 01 SUBJECT */}
+        {/* 01 VISUAL STYLE & QUALITY */}
         <div className="sec">
-          <SH n={1} t="What's in it?"/>
-          <div className="chips">
-            {CHIPS.map(c=><button key={c.label} className="chip" onClick={()=>setSubj(c.fill)}>{c.label}</button>)}
+          <SH n={1} t="Visual Style & Quality"/>
+          <div className="subrow-lbl" style={{marginBottom:"0.45rem"}}>Pick up to 3 — sets the rendering medium MidJourney builds from</div>
+          <div className="stabs">
+            {Object.keys(VISUAL_QUALITY).map(cat=>(
+              <button key={cat} className={`stab ${qualCat===cat?"on":""}`} onClick={()=>setQualCat(cat)}>{cat}</button>
+            ))}
           </div>
-          <input className="subj-in" value={subj} onChange={e=>setSubj(e.target.value)} placeholder={placeholder}/>
+          <div className="pills">
+            {VISUAL_QUALITY[qualCat].map(it=>(
+              <button key={it.v}
+                className={`pill ${qualSels.includes(it.v)?"on":""}`}
+                onClick={()=>{
+                  if(qualSels.includes(it.v)) setQualSels(qualSels.filter(x=>x!==it.v));
+                  else if(qualSels.length<3) setQualSels([...qualSels,it.v]);
+                }}>
+                {it.label}
+              </button>
+            ))}
+          </div>
+          {qualSels.length>0&&(
+            <div style={{marginTop:"0.5rem",display:"flex",flexWrap:"wrap",gap:"0.3rem"}}>
+              {qualSels.map(v=>{
+                const found=Object.values(VISUAL_QUALITY).flat().find(it=>it.v===v);
+                return found?(<div key={v} style={{display:"flex",alignItems:"center",gap:"0.3rem",padding:"0.18rem 0.45rem",border:"1px solid var(--pri)",borderRadius:"2px",background:"var(--priG)"}}>
+                  <span style={{fontFamily:"JetBrains Mono,monospace",fontSize:"0.5rem",color:"var(--pri)"}}>{found.label}</span>
+                  <button onClick={()=>setQualSels(qualSels.filter(x=>x!==v))} style={{background:"none",border:"none",color:"var(--pri)",cursor:"pointer",fontSize:"0.6rem",padding:0,lineHeight:1}}>✕</button>
+                </div>):null;
+              })}
+            </div>
+          )}
         </div>
 
         <div className="div"/>
 
-        {/* 02 SETTING */}
+        {/* 02 SUBJECT */}
         <div className="sec">
-          <SH n={2} t="Where?"/>
+          <SH n={2} t="Who's in it?"/>
+          <div className="subrows">
+            <div className="subrow">
+              <div className="subrow-lbl">Group Size</div>
+              <div className="pills">{SUBJ_GROUP.map(it=><button key={it.v} className={`pill ${sg===it.v?"on":""}`} onClick={()=>setSg(sg===it.v?null:it.v)}>{it.label}</button>)}</div>
+            </div>
+            {(sg==="solo"||sg==="two")&&<>
+              {sg==="solo"&&<div className="subrow">
+                <div className="subrow-lbl">Gender</div>
+                <div className="pills">{SUBJ_GENDER.map(it=><button key={it.v} className={`pill ${sgender===it.v?"on":""}`} onClick={()=>setSgender(sgender===it.v?null:it.v)}>{it.label}</button>)}</div>
+              </div>}
+              {sg==="solo"&&<div className="subrow">
+                <div className="subrow-lbl">Age</div>
+                <div className="pills">{SUBJ_AGE.map(it=><button key={it.v} className={`pill ${sage===it.v?"on":""}`} onClick={()=>setSage(sage===it.v?null:it.v)}>{it.label}</button>)}</div>
+              </div>}
+              {sg==="solo"&&<div className="subrow">
+                <div className="subrow-lbl">Ethnicity</div>
+                <div className="pills">{SUBJ_ETHNICITY.map(it=><button key={it.v} className={`pill ${seth===it.v?"on":""}`} onClick={()=>setSeth(seth===it.v?null:it.v)}>{it.label}</button>)}</div>
+              </div>}
+              {sg==="solo"&&<div className="subrow">
+                <div className="subrow-lbl">Build</div>
+                <div className="pills">{SUBJ_BUILD.map(it=><button key={it.v} className={`pill ${sbuild===it.v?"on":""}`} onClick={()=>setSbuild(sbuild===it.v?null:it.v)}>{it.label}</button>)}</div>
+              </div>}
+              {sg==="solo"&&<div className="subrow-lbl" style={{marginTop:"0.2rem",paddingTop:"0.4rem",borderTop:"1px solid var(--bd)"}}>HAIR</div>}
+              {sg==="solo"&&<div className="subrow">
+                <div className="subrow-lbl">Length</div>
+                <div className="pills">{SUBJ_HAIR_LEN.map(it=><button key={it.v} className={`pill ${shlen===it.v?"on":""}`} onClick={()=>setShlen(shlen===it.v?null:it.v)}>{it.label}</button>)}</div>
+              </div>}
+              {sg==="solo"&&<div className="subrow">
+                <div className="subrow-lbl">Texture</div>
+                <div className="pills">{SUBJ_HAIR_TEX.map(it=><button key={it.v} className={`pill ${shtex===it.v?"on":""}`} onClick={()=>setShtex(shtex===it.v?null:it.v)}>{it.label}</button>)}</div>
+              </div>}
+              {sg==="solo"&&<div className="subrow">
+                <div className="subrow-lbl">Hair Style</div>
+                <div className="pills">{SUBJ_HAIR_STYLE.map(it=><button key={it.v} className={`pill ${shstyle===it.v?"on":""}`} onClick={()=>setShstyle(shstyle===it.v?null:it.v)}>{it.label}</button>)}</div>
+              </div>}
+              {sg==="solo"&&<div className="subrow">
+                <div className="subrow-lbl">Hair Color</div>
+                <div className="cpills">{COLORS.map(it=><button key={it.v} className={`cpill ${shcolor===it.v?"on":""}`} onClick={()=>setShcolor(shcolor===it.v?null:it.v)}><span className="cdot" style={{background:it.hex}}/>{it.label}</button>)}</div>
+              </div>}
+              <div className="subrow-lbl" style={{marginTop:"0.2rem",paddingTop:"0.4rem",borderTop:"1px solid var(--bd)"}}>OUTFIT</div>
+              <div className="subrow">
+                <div className="subrow-lbl">Style</div>
+                <div className="pills">{SUBJ_OUTFIT.map(it=><button key={it.v} className={`pill ${soutfit===it.v?"on":""}`} onClick={()=>setSoutfit(soutfit===it.v?null:it.v)}>{it.label}</button>)}</div>
+              </div>
+              <div className="subrow">
+                <div className="subrow-lbl">Outfit Color</div>
+                <div className="cpills">{COLORS.map(it=><button key={it.v} className={`cpill ${soutfitcolor===it.v?"on":""}`} onClick={()=>setSoutfitcolor(soutfitcolor===it.v?null:it.v)}><span className="cdot" style={{background:it.hex}}/>{it.label}</button>)}</div>
+              </div>
+              <div className="subrow-lbl" style={{marginTop:"0.2rem",paddingTop:"0.4rem",borderTop:"1px solid var(--bd)"}}>ACTION</div>
+              <div className="subrow">
+                <div className="subrow-lbl">Pose / Action</div>
+                <div className="pills">{SUBJ_POSE.map(it=><button key={it.v} className={`pill ${spose===it.v?"on":""}`} onClick={()=>setSpose(spose===it.v?null:it.v)}>{it.label}</button>)}</div>
+              </div>
+              <div className="subrow">
+                <div className="subrow-lbl">Expression / Energy</div>
+                <div className="pills">{SUBJ_EXPRESSION.map(it=><button key={it.v} className={`pill ${sexp===it.v?"on":""}`} onClick={()=>setSexp(sexp===it.v?null:it.v)}>{it.label}</button>)}</div>
+              </div>
+            </>}
+            {builtSubject&&<div className="subj-preview">{builtSubject}</div>}
+            {!builtSubject&&sg&&sg!=="none"&&sg!=="solo"&&sg!=="two"&&<div className="subj-preview subj-preview-empty">{sg==="group"?"a small group of people":sg==="crowd"?"a large crowd of people":"a massive packed crowd"}</div>}
+          </div>
+        </div>
+
+        <div className="div"/>
+
+        {/* 03 WHERE */}
+        <div className="sec">
+          <SH n={3} t="Where?"/>
           <div className="stabs">
-            {Object.keys(SETTINGS).map(c=><button key={c} className={`stab ${scat===c?"on":""}`} onClick={()=>changeScat(c)}>{c}</button>)}
+            {Object.keys(SETTINGS).map(cat=><button key={cat} className={`stab ${scat===cat?"on":""}`} onClick={()=>changeScat(cat)}>{cat}</button>)}
           </div>
           <select value={sval} onChange={e=>setSval(e.target.value)}>
             <option value="">— Pick a setting —</option>
@@ -515,35 +692,18 @@ function App(){
 
         <div className="div"/>
 
-        {/* 03 STYLE */}
+        {/* 04 LIGHT & TIME */}
         <div className="sec">
-          <SH n={3} t={styleL1}/>
-          <div className="sectype">
-            <div>
-              <div className="sectype-label">{styleL1}</div>
-              <PillGroup items={stylePool} val={style} onToggle={setStyle}/>
-            </div>
-            {show2 && <div>
-              <div className="sectype-label">{styleL2}</div>
-              <PillGroup items={style2Pool} val={style2} onToggle={setStyle2}/>
-            </div>}
-          </div>
-        </div>
-
-        <div className="div"/>
-
-        {/* 04 MOOD */}
-        <div className="sec">
-          <SH n={4} t="The Feeling"/>
-          <PillGroup items={MOODS} val={mood} onToggle={setMood}/>
-        </div>
-
-        <div className="div"/>
-
-        {/* 05 TIME */}
-        <div className="sec">
-          <SH n={5} t="Light & Time"/>
+          <SH n={4} t="Light & Time"/>
           <PillGroup items={TIMES} val={time} onToggle={setTime}/>
+        </div>
+
+        <div className="div"/>
+
+        {/* 05 THE FEELING */}
+        <div className="sec">
+          <SH n={5} t="The Feeling"/>
+          <PillGroup items={MOODS} val={mood} onToggle={setMood}/>
         </div>
 
         <div className="div"/>
@@ -559,15 +719,9 @@ function App(){
         {/* 07 CUSTOM */}
         <div className="sec">
           <SH n={7} t="Anything Else?"/>
-          <FL c="Specific details, colors, objects, textures — things the buttons don't cover"/>
+          <FL c="Specific details, objects, colors, textures — things the buttons don't cover"/>
           <textarea className="custom-in" value={custom} onChange={e=>setCustom(e.target.value)}
-            placeholder={
-              mode==="photo"?"e.g. she's smiling back at the camera, her jacket is slightly wet, a blurred taxi in the background...":
-              mode==="cinematic"?"e.g. massive copper airships drift through the haze, tiny figures below emphasizing the impossible scale...":
-              mode==="illustrated"?"e.g. convenience store shelves full of snacks behind him, warm indoor light spilling through the glass door...":
-              mode==="dark"?"e.g. a blood red river cuts through the city streets below, bombers crossing a swirling moonlit sky...":
-              "e.g. the old TV screen flickers with a soft cartoon, warm light from string lights casting mottled shadows on the wall..."
-            }/>
+            placeholder="e.g. her jacket is slightly wet, a blurred taxi in the background, steam rising from a grate nearby..."/>
         </div>
 
         <div className="div"/>
@@ -600,7 +754,7 @@ function App(){
         <div className="pout">
           {prompt
             ?<><span>{promptScene}</span><span className="pout-p">{promptParams?" "+promptParams:""}</span></>
-            :<span className="pout-empty">Pick a mode and start building — your prompt assembles here</span>}
+            :<span className="pout-empty">Select a visual style and start building — your prompt assembles here</span>}
         </div>
         <button className={`copy-btn ${copied?"ok":""}`} onClick={copy} disabled={!prompt}>
           {copied?"✓  Copied to Clipboard":"Copy Prompt →"}
