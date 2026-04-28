@@ -9,66 +9,14 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.5/babel.min.js"></script>
   <style>
     body { margin: 0; padding: 0; background: #060810; }
-    /* API key banner */
-    #api-banner {
-      position: fixed; top: 0; left: 0; right: 0; z-index: 9999;
-      background: #0f1120; border-bottom: 1px solid #363c5a;
-      padding: 0.5rem 1.25rem;
-      display: flex; align-items: center; gap: 0.75rem;
-    }
-    #api-banner label {
-      font-family: monospace; font-size: 0.65rem; letter-spacing: 0.12em;
-      text-transform: uppercase; color: #00b8cc; white-space: nowrap;
-    }
-    #api-key-input {
-      flex: 1; background: #060810; border: 1px solid #363c5a;
-      color: #f0ece0; padding: 0.3rem 0.6rem;
-      font-family: monospace; font-size: 0.75rem; border-radius: 2px;
-      outline: none;
-    }
-    #api-key-input:focus { border-color: #ffe040; }
-    #api-key-save {
-      background: #ffe040; border: none; color: #060810;
-      font-family: monospace; font-size: 0.65rem; font-weight: 700;
-      letter-spacing: 0.1em; text-transform: uppercase;
-      padding: 0.3rem 0.8rem; border-radius: 2px; cursor: pointer;
-    }
-    #api-key-save:hover { background: #fff068; }
-    #api-banner.hidden { display: none; }
-    #app-root { padding-top: 42px; }
+    #app-root { padding-top: 0; }
   </style>
 </head>
 <body>
 
-  <!-- API Key Banner -->
-  <div id="api-banner">
-    <label>Anthropic API Key</label>
-    <input id="api-key-input" type="password" placeholder="sk-ant-..." spellcheck="false" />
-    <button id="api-key-save">Save</button>
-  </div>
-
   <div id="app-root"></div>
 
   <script>
-    // Restore saved key on load
-    (function() {
-      const saved = localStorage.getItem("mj_api_key");
-      if (saved) {
-        window.__MJ_API_KEY__ = saved;
-        document.getElementById("api-key-input").value = saved;
-      }
-      document.getElementById("api-key-save").addEventListener("click", function() {
-        const val = document.getElementById("api-key-input").value.trim();
-        if (val) {
-          window.__MJ_API_KEY__ = val;
-          localStorage.setItem("mj_api_key", val);
-          const btn = document.getElementById("api-key-save");
-          btn.textContent = "Saved ✓";
-          setTimeout(() => btn.textContent = "Save", 1500);
-        }
-      });
-    })();
-
     // Destructure React hooks for use without imports
     const { useState, useMemo, useRef, useCallback } = React;
   </script>
@@ -494,47 +442,6 @@ const THEMES = {
 };
 
 // ─────────────────────────────────────────────
-// SYSTEM PROMPT — uses .value strings only
-// ─────────────────────────────────────────────
-
-function buildSystemPrompt() {
-  const vals = (arr) => arr.map(x => x.value);
-  const allLighting = Object.values(LIGHTING).flat().map(x => x.value);
-  return `You are a MidJourney environment prompt analyst. Analyze the image and map it to EXACT value strings from the lists below.
-
-RULES:
-- Only use strings exactly as shown. If nothing fits, use null.
-- Arrays: up to 4 items.
-- stylize: 50-150 photorealistic, 150-300 cinematic, 400-600 artistic, 750+ painterly
-- chaos: 0-5 structured, 10-20 slight, 25-50 organic, 75+ unpredictable
-- Return ONLY raw JSON. No markdown, no explanation.
-
-LOCATIONS: ${JSON.stringify(Object.values(LOCATION_CATS).flat().map(x=>x.value))}
-TIMES: ${JSON.stringify(vals(TIMES))}
-WEATHER: ${JSON.stringify(vals(WEATHER))}
-ARCH_STYLES: ${JSON.stringify(vals(ARCH_STYLES))}
-MATERIALS: ${JSON.stringify(vals(MATERIALS))}
-FOREGROUNDS: ${JSON.stringify(vals(FOREGROUNDS))}
-MIDGROUNDS: ${JSON.stringify(vals(MIDGROUNDS))}
-BACKGROUNDS: ${JSON.stringify(vals(BACKGROUNDS))}
-LIGHTING: ${JSON.stringify(allLighting)}
-PARTICLES: ${JSON.stringify(vals(PARTICLES))}
-MOODS: ${JSON.stringify(vals(MOODS))}
-FRAMINGS: ${JSON.stringify(vals(FRAMINGS))}
-FOCAL_LENGTHS: ${JSON.stringify(vals(FOCAL_LENGTHS))}
-STYLES: ${JSON.stringify(Object.values(STYLES).flat().map(x=>x.value))}
-RATIOS: ${JSON.stringify(vals(RATIOS))}
-
-Return:
-{"location":string|null,"time":string|null,"weather":string|null,"archStyle":string|null,"materials":string[],"foreground":string|null,"midground":string|null,"background":string|null,"lighting":string|null,"particles":string[],"mood":string|null,"framing":string|null,"focalLen":string|null,"styleRef":string|null,"ratio":string|null,"stylize":number,"chaos":number}`;
-}
-
-function matchVal(items, val) {
-  if (!val) return null;
-  return items.find(x => x.value === val) ? val : null;
-}
-
-// ─────────────────────────────────────────────
 // BASE CSS
 // ─────────────────────────────────────────────
 
@@ -560,40 +467,7 @@ const BASE_CSS = `
   .theme-pill-name { font-family:'Rajdhani',sans-serif; font-size:0.75rem; font-weight:600; letter-spacing:0.04em; color:var(--muted); white-space:nowrap; }
   .theme-pill.on .theme-pill-name { color:var(--primary); }
 
-  /* SCAN */
-  .scan-panel { padding:0.75rem 1.25rem 0.85rem; border-bottom:1px solid var(--border); background:linear-gradient(180deg,var(--bg) 0%,transparent 100%); }
-  .scan-panel-head { display:flex; align-items:center; justify-content:space-between; margin-bottom:0.55rem; }
-  .scan-panel-label { font-family:'JetBrains Mono',monospace; font-size:0.52rem; letter-spacing:0.2em; text-transform:uppercase; color:var(--secondary-dim); }
-  .scan-panel-sub { font-size:0.68rem; color:var(--dim); }
-  .scan-clear-btn { background:none; border:none; font-family:'JetBrains Mono',monospace; font-size:0.5rem; color:var(--dim); cursor:pointer; letter-spacing:0.1em; text-transform:uppercase; transition:color 0.15s; padding:0; }
-  .scan-clear-btn:hover { color:var(--muted); }
-  .drop-zone { border:1px dashed var(--border-hi); border-radius:3px; min-height:72px; display:flex; align-items:center; justify-content:center; cursor:pointer; transition:all 0.15s; position:relative; overflow:hidden; background:var(--bg-input); }
-  .drop-zone:hover { border-color:var(--primary); }
-  .drop-zone.drag-over { border-color:var(--primary); background:var(--primary-glow); }
-  .drop-zone-inner { display:flex; flex-direction:column; align-items:center; gap:0.35rem; padding:1rem; }
-  .drop-icon { font-size:1.3rem; opacity:0.5; }
-  .drop-text { font-family:'JetBrains Mono',monospace; font-size:0.58rem; color:var(--muted); letter-spacing:0.08em; text-transform:uppercase; }
-  .drop-subtext { font-size:0.65rem; color:var(--dim); }
-  .scan-img-wrap { position:relative; width:100%; }
-  .scan-img { width:100%; display:block; max-height:180px; object-fit:cover; border-radius:2px; }
-  .scan-overlay { position:absolute; top:0; left:0; right:0; bottom:0; pointer-events:none; background:linear-gradient(180deg,transparent 0%,transparent 35%,var(--primary-glow) 48%,rgba(255,255,255,0.06) 50%,var(--primary-glow) 52%,transparent 65%,transparent 100%); animation:scanline 1.6s linear infinite; border-radius:2px; }
-  @keyframes scanline { 0%{transform:translateY(-100%)} 100%{transform:translateY(100%)} }
-  .scan-grid-overlay { position:absolute; top:0; left:0; right:0; bottom:0; pointer-events:none; border-radius:2px; background-image:linear-gradient(var(--primary-glow) 1px,transparent 1px),linear-gradient(90deg,var(--primary-glow) 1px,transparent 1px); background-size:20px 20px; animation:gridpulse 1.6s ease-in-out infinite; }
-  @keyframes gridpulse { 0%,100%{opacity:0.2} 50%{opacity:0.6} }
-  .scan-status-bar { margin-top:0.6rem; display:flex; align-items:center; gap:0.6rem; }
-  .scan-status-text { font-family:'JetBrains Mono',monospace; font-size:0.58rem; letter-spacing:0.08em; }
-  .scan-status-text.analyzing { color:var(--secondary); animation:blink 1s ease-in-out infinite; }
-  .scan-status-text.done { color:#00e090; }
-  .scan-status-text.error { color:#ff4060; }
-  @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.4} }
-  .scan-matches { display:flex; flex-wrap:wrap; gap:0.3rem; margin-top:0.5rem; }
-  .scan-match-pill { padding:0.18rem 0.5rem; border:1px solid #00e090; border-radius:2px; font-family:'JetBrains Mono',monospace; font-size:0.5rem; color:#00e090; background:rgba(0,224,144,0.08); white-space:nowrap; }
-  .scan-match-pill.null-match { border-color:var(--border-hi); color:var(--dim); background:transparent; }
-  .scan-btn { margin-top:0.6rem; width:100%; padding:0.6rem; background:transparent; border:1px solid var(--primary); color:var(--primary); font-family:'Cinzel',serif; font-size:0.68rem; font-weight:700; letter-spacing:0.2em; text-transform:uppercase; cursor:pointer; border-radius:2px; transition:all 0.15s; display:flex; align-items:center; justify-content:center; gap:0.5rem; }
-  .scan-btn:hover:not(:disabled) { background:var(--primary-glow); box-shadow:0 0 16px var(--primary-glow); }
-  .scan-btn:disabled { opacity:0.4; cursor:not-allowed; }
-  .scan-dot { width:6px; height:6px; border-radius:50%; background:var(--primary); animation:pulse 1s ease-in-out infinite; }
-  @keyframes pulse { 0%,100%{transform:scale(1);opacity:1} 50%{transform:scale(1.5);opacity:0.4} }
+
 
   .reset-bar { display:flex; justify-content:flex-end; padding:0.3rem 1.25rem 0; }
   .reset-btn { background:none; border:none; font-family:'JetBrains Mono',monospace; font-size:0.52rem; color:var(--dim); cursor:pointer; letter-spacing:0.1em; padding:0.2rem 0; transition:color 0.15s; text-transform:uppercase; }
@@ -612,13 +486,11 @@ const BASE_CSS = `
   select { width:100%; background:var(--bg-input); border:1px solid var(--border-hi); color:var(--text); padding:0.55rem 2rem 0.55rem 0.75rem; font-family:'Rajdhani',sans-serif; font-size:0.85rem; font-weight:500; border-radius:2px; appearance:none; cursor:pointer; background-repeat:no-repeat; background-position:right 0.75rem center; transition:border-color 0.15s,box-shadow 0.15s; }
   select:focus { outline:none; border-color:var(--primary); box-shadow:0 0 0 1px var(--primary-glow); }
   select option { background:var(--bg-input); color:var(--text); }
-  select.auto-filled { border-color:var(--secondary); box-shadow:0 0 6px var(--secondary-glow); }
 
   .pills { display:flex; flex-wrap:wrap; gap:0.35rem; }
   .pill { padding:0.3rem 0.65rem; border:1px solid var(--border-hi); background:transparent; color:var(--muted); font-family:'Rajdhani',sans-serif; font-size:0.82rem; font-weight:500; letter-spacing:0.02em; border-radius:2px; cursor:pointer; transition:all 0.12s; white-space:nowrap; text-align:left; line-height:1.3; }
   .pill:hover { border-color:var(--primary); color:var(--primary); background:var(--primary-glow); }
   .pill.on { border-color:var(--primary); background:var(--primary-glow); color:var(--primary); box-shadow:0 0 8px var(--primary-glow); text-shadow:0 0 8px var(--primary-glow); }
-  .pill.auto-filled { box-shadow:0 0 8px var(--secondary-glow) !important; border-color:var(--secondary) !important; color:var(--secondary) !important; background:var(--secondary-glow) !important; }
   .tab { padding:0.28rem 0.68rem; border:1px solid var(--border-hi); background:transparent; color:var(--dim); font-family:'JetBrains Mono',monospace; font-size:0.52rem; letter-spacing:0.14em; text-transform:uppercase; border-radius:2px; cursor:pointer; transition:all 0.12s; }
   .tab:hover { border-color:var(--secondary-dim); color:var(--secondary); }
   .tab.on { background:var(--secondary-glow); border-color:var(--secondary); color:var(--secondary); box-shadow:0 0 8px var(--secondary-glow); }
@@ -746,127 +618,6 @@ function ThemePicker({ themeKey, onChange }) {
 }
 
 // ─────────────────────────────────────────────
-// SCAN PANEL
-// ─────────────────────────────────────────────
-
-function ScanPanel({ onApply }) {
-  const [preview,   setPreview]   = useState(null);
-  const [imgData,   setImgData]   = useState(null);
-  const [scanState, setScanState] = useState("idle");
-  const [matches,   setMatches]   = useState([]);
-  const [errMsg,    setErrMsg]    = useState("");
-  const [dragOver,  setDragOver]  = useState(false);
-  const inputRef = useRef(null);
-
-  const loadFile = (file) => {
-    if (!file||!file.type.startsWith("image/")) return;
-    const reader = new FileReader();
-    reader.onload = (ev) => {
-      setPreview(ev.target.result);
-      setImgData({ base64: ev.target.result.split(",")[1], mediaType: file.type });
-      setScanState("loaded"); setMatches([]);
-    };
-    reader.readAsDataURL(file);
-  };
-
-  const handleScan = async () => {
-    if (!imgData) return;
-    setScanState("scanning"); setErrMsg("");
-    try {
-      const apiKey = window.__MJ_API_KEY__;
-      if (!apiKey) throw new Error("Missing VITE_ANTHROPIC_API_KEY — see README");
-      const res = await fetch("https://api.anthropic.com/v1/messages", {
-        method:"POST", headers:{"Content-Type":"application/json","x-api-key":apiKey,"anthropic-version":"2023-06-01","anthropic-dangerous-direct-browser-access":"true"},
-        body: JSON.stringify({
-          model:"claude-sonnet-4-20250514", max_tokens:1000,
-          system: buildSystemPrompt(),
-          messages:[{ role:"user", content:[
-            { type:"image", source:{ type:"base64", media_type:imgData.mediaType, data:imgData.base64 }},
-            { type:"text",  text:"Analyze this environment and return the JSON mapping." }
-          ]}]
-        })
-      });
-      const data = await res.json();
-      if (data.error) throw new Error(data.error.message||"API error");
-      const raw = data.content.map(c=>c.text||"").join("");
-      const parsed = JSON.parse(raw.replace(/```json|```/g,"").trim());
-      const applied = onApply(parsed);
-      setMatches(applied); setScanState("done");
-    } catch(e) {
-      setScanState("error"); setErrMsg(e.message||"Scan failed — retry");
-    }
-  };
-
-  const handleClear = () => {
-    setPreview(null); setImgData(null); setScanState("idle"); setMatches([]); setErrMsg("");
-  };
-
-  return (
-    <div className="scan-panel">
-      <div className="scan-panel-head">
-        <div>
-          <div className="scan-panel-label">◈ Reverse Engineer from Image</div>
-          <div className="scan-panel-sub">Drop a scene image — AI reads it and fills the form</div>
-        </div>
-        {preview&&<button className="scan-clear-btn" onClick={handleClear}>✕ clear</button>}
-      </div>
-
-      {!preview ? (
-        <div className={`drop-zone ${dragOver?"drag-over":""}`}
-          onClick={()=>inputRef.current?.click()}
-          onDrop={e=>{e.preventDefault();setDragOver(false);loadFile(e.dataTransfer.files[0]);}}
-          onDragOver={e=>{e.preventDefault();setDragOver(true);}}
-          onDragLeave={()=>setDragOver(false)}>
-          <div className="drop-zone-inner">
-            <div className="drop-icon">⊕</div>
-            <div className="drop-text">Drop image here</div>
-            <div className="drop-subtext">or tap to browse · jpg / png / webp</div>
-          </div>
-          <input ref={inputRef} type="file" accept="image/*" style={{display:"none"}}
-            onChange={e=>loadFile(e.target.files[0])} />
-        </div>
-      ) : (
-        <div className="scan-img-wrap">
-          <img src={preview} className="scan-img" alt="scene to analyze" />
-          {scanState==="scanning"&&<><div className="scan-overlay"/><div className="scan-grid-overlay"/></>}
-        </div>
-      )}
-
-      {preview&&scanState!=="done"&&(
-        <button className="scan-btn" onClick={handleScan} disabled={scanState==="scanning"}>
-          {scanState==="scanning"
-            ? <><div className="scan-dot"/><span>Analyzing scene...</span></>
-            : <span>◈ Scan Scene</span>}
-        </button>
-      )}
-
-      {scanState==="done"&&matches.length>0&&(
-        <div>
-          <div className="scan-status-bar">
-            <span className="scan-status-text done">
-              ✓ {matches.filter(m=>m.matched).length} of {matches.length} fields matched
-            </span>
-            <button className="scan-clear-btn" onClick={handleClear}>scan another</button>
-          </div>
-          <div className="scan-matches">
-            {matches.map((m,i)=>(
-              <div key={i} className={`scan-match-pill ${m.matched?"":"null-match"}`}>
-                {m.field}{m.matched?" ✓":" —"}
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-      {scanState==="error"&&(
-        <div className="scan-status-bar">
-          <span className="scan-status-text error">✗ {errMsg}</span>
-        </div>
-      )}
-    </div>
-  );
-}
-
-// ─────────────────────────────────────────────
 // MAIN
 // ─────────────────────────────────────────────
 
@@ -895,66 +646,10 @@ function App() {
   const [useRaw,     setUseRaw]     = useState(false);
   const [negatives,  setNegatives]  = useState(["people, text, watermark, oversaturated"]);
   const [copied,     setCopied]     = useState(false);
-  const [autoFields, setAutoFields] = useState({});
 
   const t = THEMES[themeKey];
   const single = (setter, cur) => (val) => setter(cur===val?"":val);
 
-  const handleApply = useCallback((parsed) => {
-    const results = []; const newAuto = {};
-    const trySet = (field, list, setter, val) => {
-      const found = matchVal(list, val);
-      if (found) { setter(found); newAuto[field]=found; results.push({field,matched:true}); }
-      else results.push({field,matched:false});
-    };
-    const tryMulti = (field, list, setter, vals) => {
-      const found = (vals||[]).map(v=>matchVal(list,v)).filter(Boolean).slice(0,4);
-      if (found.length) { setter(found); found.forEach(f=>{newAuto[field+":"+f]=f;}); results.push({field,matched:true}); }
-      else results.push({field,matched:false});
-    };
-    const allLocs = Object.values(LOCATION_CATS).flat();
-    if (parsed.location) {
-      const found = allLocs.find(x=>x.value===parsed.location);
-      if (found) {
-        setLocation(found.value);
-        const cat = Object.entries(LOCATION_CATS).find(([,v])=>v.includes(found))?.[0];
-        if (cat) setLocationCat(cat);
-        newAuto["location"]=found.value; results.push({field:"location",matched:true});
-      } else results.push({field:"location",matched:false});
-    } else results.push({field:"location",matched:false});
-    trySet("time",      TIMES,       setTime,      parsed.time);
-    trySet("weather",   WEATHER,     setWeather,   parsed.weather);
-    trySet("archStyle", ARCH_STYLES, setArchStyle, parsed.archStyle);
-    tryMulti("materials", MATERIALS, setMaterials, parsed.materials);
-    trySet("foreground", FOREGROUNDS, setForeground, parsed.foreground);
-    trySet("midground",  MIDGROUNDS,  setMidground,  parsed.midground);
-    trySet("background", BACKGROUNDS, setBackground, parsed.background);
-    tryMulti("particles", PARTICLES, setParticles, parsed.particles);
-    trySet("mood",    MOODS,    setMood,    parsed.mood);
-    trySet("framing", FRAMINGS, setFraming, parsed.framing);
-    trySet("focalLen", FOCAL_LENGTHS, setFocalLen, parsed.focalLen);
-    trySet("ratio", RATIOS, setRatio, parsed.ratio);
-    if (parsed.lighting) {
-      let found = false;
-      for (const [cat,opts] of Object.entries(LIGHTING)) {
-        const m = matchVal(opts, parsed.lighting);
-        if (m) { setLightCat(cat); setLighting(m); newAuto["lighting"]=m; found=true; break; }
-      }
-      results.push({field:"lighting",matched:found});
-    } else results.push({field:"lighting",matched:false});
-    if (parsed.styleRef) {
-      let found = false;
-      for (const [cat,opts] of Object.entries(STYLES)) {
-        const m = matchVal(opts, parsed.styleRef);
-        if (m) { setStyleCat(cat); setStyleRef(m); newAuto["styleRef"]=m; found=true; break; }
-      }
-      results.push({field:"style",matched:found});
-    } else results.push({field:"style",matched:false});
-    if (typeof parsed.stylize==="number") setStylize(Math.min(900,Math.max(50,Math.round(parsed.stylize))));
-    if (typeof parsed.chaos==="number") setChaos(Math.min(100,Math.max(0,Math.round(parsed.chaos))));
-    setAutoFields(newAuto);
-    return results;
-  }, []);
 
   const prompt = useMemo(() => {
     const p = [];
@@ -990,10 +685,9 @@ function App() {
     setMaterials([]); setForeground(""); setMidground(""); setBackground("");
     setLighting(""); setParticles([]); setMood(""); setFraming(""); setFocalLen("");
     setStyleRef(""); setRatio("16:9"); setStylize(250); setChaos(10);
-    setUseRaw(false); setNegatives(["people, text, watermark, oversaturated"]); setAutoFields({});
+    setUseRaw(false); setNegatives(["people, text, watermark, oversaturated"]);
   };
 
-  const isAuto = (key) => !!autoFields[key];
 
   const themeVars = {
     "--bg":t.bg,"--bg-input":t.bgInput,"--border":t.border,"--border-hi":t.borderHi,
@@ -1018,7 +712,6 @@ function App() {
         </div>
 
         <ThemePicker themeKey={themeKey} onChange={setThemeKey} />
-        <ScanPanel onApply={handleApply} />
 
         <div className="reset-bar">
           <button className="reset-btn" onClick={handleReset}>↺ Reset all</button>
@@ -1033,7 +726,7 @@ function App() {
               <FieldLabel label="Location Type" />
               <Tabs items={Object.keys(LOCATION_CATS)} value={locationCat}
                 onChange={cat=>{setLocationCat(cat); setLocation("");}} />
-              <select value={location} className={isAuto("location")?"auto-filled":""}
+              <select value={location}
                 onChange={e=>setLocation(e.target.value)}>
                 <option value="">— Select location —</option>
                 {LOCATION_CATS[locationCat].map(l=><option key={l.value} value={l.value}>{l.label}</option>)}
@@ -1042,12 +735,12 @@ function App() {
             <div className="field">
               <FieldLabel label="Time of Day" />
               <Pills items={TIMES} value={time} onToggle={single(setTime,time)}
-                autoFilled={isAuto("time")?[time]:[]} />
+                />
             </div>
             <div className="field">
               <FieldLabel label="Weather / Conditions" />
               <Pills items={WEATHER} value={weather} onToggle={single(setWeather,weather)}
-                autoFilled={isAuto("weather")?[weather]:[]} />
+                />
             </div>
           </div>
 
@@ -1058,7 +751,7 @@ function App() {
             <SectionHead n={2} title="Architecture & Materials" />
             <div className="field">
               <FieldLabel label="Architectural Style" />
-              <select value={archStyle} className={isAuto("archStyle")?"auto-filled":""}
+              <select value={archStyle}
                 onChange={e=>setArchStyle(e.target.value)}>
                 <option value="">— Select style —</option>
                 {ARCH_STYLES.map(s=><option key={s.value} value={s.value}>{s.label}</option>)}
@@ -1067,7 +760,7 @@ function App() {
             <div className="field">
               <FieldLabel label="Primary Materials" note="(up to 4)" />
               <Pills items={MATERIALS} value={materials} multi
-                autoFilled={materials.filter(m=>isAuto("materials:"+m))}
+               
                 onToggle={v=>{
                   if(materials.includes(v)) setMaterials(materials.filter(x=>x!==v));
                   else if(materials.length<4) setMaterials([...materials,v]);
@@ -1082,7 +775,7 @@ function App() {
             <SectionHead n={3} title="Spatial Layers" />
             <div className="field">
               <FieldLabel label="Foreground" note="anchor the eye" />
-              <select value={foreground} className={isAuto("foreground")?"auto-filled":""}
+              <select value={foreground}
                 onChange={e=>setForeground(e.target.value)}>
                 <option value="">— Select foreground element —</option>
                 {FOREGROUNDS.map(f=><option key={f.value} value={f.value}>{f.label}</option>)}
@@ -1090,7 +783,7 @@ function App() {
             </div>
             <div className="field">
               <FieldLabel label="Midground" />
-              <select value={midground} className={isAuto("midground")?"auto-filled":""}
+              <select value={midground}
                 onChange={e=>setMidground(e.target.value)}>
                 <option value="">— Select midground —</option>
                 {MIDGROUNDS.map(m=><option key={m.value} value={m.value}>{m.label}</option>)}
@@ -1098,7 +791,7 @@ function App() {
             </div>
             <div className="field">
               <FieldLabel label="Background" note="fades into atmosphere" />
-              <select value={background} className={isAuto("background")?"auto-filled":""}
+              <select value={background}
                 onChange={e=>setBackground(e.target.value)}>
                 <option value="">— Select background —</option>
                 {BACKGROUNDS.map(b=><option key={b.value} value={b.value}>{b.label}</option>)}
@@ -1115,7 +808,7 @@ function App() {
               onChange={cat=>{setLightCat(cat);setLighting("");}} />
             <Pills items={LIGHTING[lightCat]} value={lighting}
               onToggle={single(setLighting,lighting)}
-              autoFilled={isAuto("lighting")?[lighting]:[]} />
+              />
           </div>
 
           <div className="div" />
@@ -1126,7 +819,7 @@ function App() {
             <div className="field">
               <FieldLabel label="Air / Particles" note="(up to 4) — adds spatial depth" />
               <Pills items={PARTICLES} value={particles} multi
-                autoFilled={particles.filter(p=>isAuto("particles:"+p))}
+               
                 onToggle={v=>{
                   if(particles.includes(v)) setParticles(particles.filter(x=>x!==v));
                   else if(particles.length<4) setParticles([...particles,v]);
@@ -1135,7 +828,7 @@ function App() {
             <div className="field">
               <FieldLabel label="Mood Register" />
               <Pills items={MOODS} value={mood} onToggle={single(setMood,mood)}
-                autoFilled={isAuto("mood")?[mood]:[]} />
+                />
             </div>
           </div>
 
@@ -1147,11 +840,11 @@ function App() {
             <div className="field">
               <FieldLabel label="Framing" />
               <Pills items={FRAMINGS} value={framing} onToggle={single(setFraming,framing)}
-                autoFilled={isAuto("framing")?[framing]:[]} />
+                />
             </div>
             <div className="field">
               <FieldLabel label="Focal Length" />
-              <select value={focalLen} className={isAuto("focalLen")?"auto-filled":""}
+              <select value={focalLen}
                 onChange={e=>setFocalLen(e.target.value)}>
                 <option value="">— Select focal length —</option>
                 {FOCAL_LENGTHS.map(f=><option key={f.value} value={f.value}>{f.label}</option>)}
@@ -1168,7 +861,7 @@ function App() {
               onChange={cat=>{setStyleCat(cat);setStyleRef("");}} />
             <Pills items={STYLES[styleCat]} value={styleRef}
               onToggle={single(setStyleRef,styleRef)}
-              autoFilled={isAuto("styleRef")?[styleRef]:[]} />
+              />
           </div>
 
           <div className="div" />
@@ -1180,7 +873,7 @@ function App() {
               <FieldLabel label="Aspect Ratio" />
               <Pills items={RATIOS} value={ratio}
                 onToggle={v=>setRatio(v)}
-                autoFilled={isAuto("ratio")?[ratio]:[]} />
+                />
             </div>
             <div className="field">
               <Slider label="Stylize" param="--s" min={50} max={900} value={stylize}
