@@ -24,6 +24,59 @@ const THEMES={
 };
 
 
+
+
+// ─── AESTHETIC ENGINE — taste-profile presets from the reference images
+const VISUAL_RECIPES=[
+  {label:"Cinematic street portrait",v:"cinematic street portrait photography, emotionally charged environmental portrait, natural human viewpoint"},
+  {label:"Noir street photo",v:"noir photography, high contrast monochrome, deep dramatic shadows, film-noir street portrait"},
+  {label:"Graphic horror art",v:"dark graphic horror artwork, bold dramatic linework, stark shapes, unsettling illustrated atmosphere"},
+  {label:"Noir manga close-up",v:"noir manga style, close-up composition, expressive ink linework, elegant cinematic shadow design"},
+  {label:"Glitch editorial",v:"glitch art editorial portrait, digital corruption, pixel distortion, RGB channel separation, layered double exposure"},
+  {label:"1970s crime still",v:"raw 1970s crime thriller film still, gritty urban realism, desaturated cinematic color, heavy analog grain"},
+  {label:"1930s WPA poster",v:"vintage 1930s WPA Federal Art Project travel poster, screen print, woodblock print aesthetic, simplified geometric forms"},
+  {label:"Android industrial still",v:"quiet android portrait in damp industrial machinery, rusted mechanical backdrop, soft eerie stillness"},
+  {label:"Historical color photo",v:"authentic historical color photograph, period accurate clothing and props, documentary realism, aged film surface"},
+  {label:"Retro arcade horror",v:"retro arcade horror scene, glowing screens, dense visual information, chiaroscuro darkness, single vivid accent"},
+];
+
+const PALETTES=[
+  {label:"No palette control",v:""},
+  {label:"Red + grayscale",v:"dominant blood red, black, and grayscale palette, one vivid red accent against darkness"},
+  {label:"Black & white",v:"pure black and white palette, strong tonal contrast, no color"},
+  {label:"B&W + gold tint",v:"black and white with subtle warm gold tint, red lips as a restrained accent"},
+  {label:"Desaturated 1970s",v:"desaturated 1970s color palette, faded blues and browns, strong contrast, aged film tones"},
+  {label:"Golden hour amber",v:"warm orange-gold palette, glowing highlights, long amber shadows, nostalgic warmth"},
+  {label:"Cold industrial green-gray",v:"cold green-gray industrial palette, muted rust, damp metal, low saturation"},
+  {label:"Cobalt poster",v:"deep cobalt blue, cream white, pale blue-gray shadows, flat poster colors"},
+  {label:"Neon cyan/amber",v:"cyan shadows and amber highlights, electric color separation, cinematic neon tension"},
+  {label:"Muted earth documentary",v:"muted earth tones, dusty sunlight, faded documentary color, realistic skin tones"},
+];
+
+const ERAS=[
+  {label:"No era anchor",v:""},
+  {label:"1930s",v:"set in the 1930s, period accurate materials, clothing, vehicles, storefronts, and atmosphere"},
+  {label:"1950s noir",v:"1950s noir mood, vintage styling, mid-century urban atmosphere, old cinema elegance"},
+  {label:"1970s grit",v:"set in 1973, authentic 1970s urban details, gritty period texture, analog crime-film atmosphere"},
+  {label:"1980s arcade",v:"1980s arcade-era atmosphere, CRT glow, analog electronics, dense retro technology"},
+  {label:"1990s film",v:"1990s film look, imperfect color, soft contrast, nostalgic analog realism"},
+  {label:"Near future",v:"near-future setting, subtly advanced technology, plausible urban futurism, not overdesigned"},
+  {label:"Timeless contemporary",v:"timeless contemporary setting, current but not trendy, grounded real-world details"},
+];
+
+const TEXTURE_ATMOS=[
+  {label:"Clean",v:"clean precise composition, controlled detail, no clutter"},
+  {label:"Film grain",v:"visible film grain, soft halation, imperfect analog surface"},
+  {label:"Grit / decay",v:"gritty textures, worn surfaces, rust, peeling paint, lived-in urban decay"},
+  {label:"Dense layered info",v:"dense layered information, visual overload, background packed with readable-feeling detail"},
+  {label:"Chiaroscuro",v:"dramatic chiaroscuro lighting, deep blacks, luminous highlights, sculpted shadow"},
+  {label:"Ink texture",v:"bold ink texture, hatching, scratchy linework, hand-drawn marks"},
+  {label:"Flat hard edges",v:"FLAT color shapes with HARD edges, NO gradients, NO photorealistic detail"},
+  {label:"Double exposure layer",v:"double exposure layering, city forms blended into the figure, transparent overlapping silhouettes"},
+  {label:"Damp mechanical",v:"dark wet machinery, rusted pipes, cables, oil stains, damp atmosphere"},
+  {label:"Aged print",v:"aged paper texture, print imperfections, faded ink, slight border wear"},
+];
+
 // ─── SUBJECT DATA
 const SUBJ_GROUP=[
   {label:"Solo",v:"solo"},
@@ -214,7 +267,7 @@ const SUBJ_EXPRESSION=[
   {label:"Confident",v:"confident"},{label:"Fierce / intense",v:"fierce and intense"},
   {label:"Mysterious",v:"mysterious and enigmatic"},{label:"Cool / unbothered",v:"cool and unbothered"},
   {label:"Seductive",v:"seductive"},{label:"Joyful / laughing",v:"joyful and laughing"},
-  {label:"Smiling softly",v:"smiling softly"},{label:"Playful",v:"playful and mischievous"},
+  {label:"Smiling softly",v:"smiling softly"},{label:"Playful",v:"playful and spirited"},
   {label:"Excited",v:"excited and energetic"},{label:"Surprised",v:"surprised"},
   {label:"Sad",v:"sad and downcast"},{label:"Melancholic",v:"melancholic and introspective"},
   {label:"Vulnerable",v:"vulnerable and emotional"},{label:"Scared",v:"scared and fearful"},
@@ -364,22 +417,31 @@ function buildSubject(sg,sgender,sage,seth,sbuild,shlen,shtex,shstyle,shcolor,so
   return parts.filter(Boolean).join(", ");
 }
 
-function buildPrompt({subject,settingObj,quality,moodObj,timeObj,cameraObj,ratio,stylize,custom}){
+function buildPrompt({subject,settingObj,quality,moodObj,timeObj,cameraObj,ratio,stylize,custom,recipeObj,paletteObj,eraObj,textureObj,chaos,weird,raw,noText}){
   const p=[];
   const sv=settingObj?settingObj.v:"";
   const camV=cameraObj?cameraObj.v:"";
   const qualStr=quality&&quality.length?quality.join(", "):"";
-  // MidJourney reads left to right — style/medium first, then subject, then world, then light, then mood, then camera
+  // MJ responds best when the visual identity comes first, then palette/era, then subject/world/light.
+  if(recipeObj&&recipeObj.v) p.push(recipeObj.v);
   if(qualStr) p.push(qualStr);
+  if(paletteObj&&paletteObj.v) p.push(paletteObj.v);
+  if(eraObj&&eraObj.v) p.push(eraObj.v);
   if(subject) p.push(subject);
   if(sv) p.push(sv);
   if(timeObj) p.push(timeObj.v);
   if(moodObj) p.push(moodObj.v);
   if(camV) p.push(camV);
+  if(textureObj&&textureObj.v) p.push(textureObj.v);
   if(custom) p.push(custom);
+  if(noText) p.push("no visible text, no readable words, no logos, no watermarks");
   const filled=p.filter(x=>x&&x.trim());
   if(!filled.length) return "";
-  return filled.join(", ")+" --v 7 --ar "+ratio+" --s "+stylize;
+  let params=" --v 7 --ar "+ratio+" --s "+stylize;
+  if(chaos>0) params += " --chaos "+chaos;
+  if(weird>0) params += " --weird "+weird;
+  if(raw) params += " --style raw";
+  return filled.join(", ")+params;
 }
 
 // ─── CSS
@@ -495,6 +557,10 @@ function PillGroup({items,val,onToggle}){return <div className="pills">{items.ma
 // ─── APP
 function App(){
   const [theme,  setTheme]  = useState("cyber");
+  const [recipe,setRecipe]= useState(null);
+  const [palette,setPalette]= useState(null);
+  const [era,setEra]= useState(null);
+  const [texture,setTexture]= useState(null);
   const [sg,     setSg]     = useState(null);
   const [sgender,setSgender]= useState(null);
   const [sage,   setSage]   = useState(null);
@@ -515,6 +581,10 @@ function App(){
   const [cam,    setCam]    = useState(null);
   const [ratio,  setRatio]  = useState("16:9");
   const [styl,   setStyl]   = useState(250);
+  const [chaos, setChaos]  = useState(0);
+  const [weird, setWeird]  = useState(0);
+  const [raw, setRaw]      = useState(false);
+  const [noText,setNoText] = useState(true);
   const [custom, setCustom] = useState("");
   const [qualCat,setQualCat]= useState("Photographic");
   const [qualSels,setQualSels]= useState([]);
@@ -524,13 +594,17 @@ function App(){
   const vars={"--bg":T.bg,"--bgI":T.bgI,"--bd":T.bd,"--bdH":T.bdH,"--pb":T.pb,"--pri":T.pri,"--priG":T.priG,"--sec":T.sec,"--secD":T.secD,"--secG":T.secG,"--tx":T.tx,"--mu":T.mu,"--di":T.di,"--pt":T.pt,"--gc":T.gc,"--hl":T.hl,"--sa":T.sa};
   const arrCSS=`select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='8' height='5' viewBox='0 0 8 5'%3E%3Cpath d='M0 0l4 5 4-5z' fill='${T.ah}' opacity='0.9'/%3E%3C/svg%3E");}`;
 
+  const recipeObj  = useMemo(()=>VISUAL_RECIPES.find(x=>x.v===recipe)||null,[recipe]);
+  const paletteObj = useMemo(()=>PALETTES.find(x=>x.v===palette)||null,[palette]);
+  const eraObj     = useMemo(()=>ERAS.find(x=>x.v===era)||null,[era]);
+  const textureObj = useMemo(()=>TEXTURE_ATMOS.find(x=>x.v===texture)||null,[texture]);
   const settingObj = useMemo(()=>Object.values(SETTINGS).flat().find(x=>x.v===sval)||null,[sval]);
   const moodObj    = useMemo(()=>MOODS.find(x=>x.v===mood)||null,[mood]);
   const timeObj    = useMemo(()=>TIMES.find(x=>x.v===time)||null,[time]);
   const camObj     = useMemo(()=>CAMERAS.find(x=>x.v===cam)||null,[cam]);
 
   const builtSubject = useMemo(()=>buildSubject(sg,sgender,sage,seth,sbuild,shlen,shtex,shstyle,shcolor,soutfit,soutfitcolor,spose,sexp),[sg,sgender,sage,seth,sbuild,shlen,shtex,shstyle,shcolor,soutfit,soutfitcolor,spose,sexp]);
-  const prompt = useMemo(()=>buildPrompt({subject:builtSubject,settingObj,moodObj,timeObj,cameraObj:camObj,quality:qualSels,ratio,stylize:styl,custom}),[builtSubject,settingObj,moodObj,timeObj,camObj,qualSels,ratio,styl,custom]);
+  const prompt = useMemo(()=>buildPrompt({subject:builtSubject,settingObj,moodObj,timeObj,cameraObj:camObj,quality:qualSels,ratio,stylize:styl,custom,recipeObj,paletteObj,eraObj,textureObj,chaos,weird,raw,noText}),[builtSubject,settingObj,moodObj,timeObj,camObj,qualSels,ratio,styl,custom,recipeObj,paletteObj,eraObj,textureObj,chaos,weird,raw,noText]);
 
   const promptScene  = prompt?prompt.replace(/\s--.*$/s,""):"";
   const promptParams = prompt?(prompt.match(/\s(--.*)$/s)?.[1]||""):"";
@@ -543,7 +617,7 @@ function App(){
     setCopied(true);setTimeout(()=>setCopied(false),2200);
   };
 
-  const reset=()=>{setSg(null);setSgender(null);setSage(null);setSeth(null);setSbuild(null);setShlen(null);setShtex(null);setShstyle(null);setShcolor(null);setSoutfit(null);setSoutfitcolor(null);setSpose(null);setSexp(null);setSval("");setMood(null);setTime(null);setCam(null);setQualCat("Photographic");setQualSels([]);setRatio("16:9");setStyl(250);setCustom("");};
+  const reset=()=>{setRecipe(null);setPalette(null);setEra(null);setTexture(null);setChaos(0);setWeird(0);setRaw(false);setNoText(true);setSg(null);setSgender(null);setSage(null);setSeth(null);setSbuild(null);setShlen(null);setShtex(null);setShstyle(null);setShcolor(null);setSoutfit(null);setSoutfitcolor(null);setSpose(null);setSexp(null);setSval("");setMood(null);setTime(null);setCam(null);setQualCat("Photographic");setQualSels([]);setRatio("16:9");setStyl(250);setCustom("");};
 
 
 
@@ -610,9 +684,33 @@ function App(){
 
         <div className="div"/>
 
-        {/* 02 SUBJECT */}
+        {/* 02 AESTHETIC ENGINE */}
         <div className="sec">
-          <SH n={2} t="Who's in it?"/>
+          <SH n={2} t="Aesthetic Engine"/>
+          <div className="subrow-lbl" style={{marginBottom:"0.45rem"}}>This is the secret sauce — choose the image family before the subject gets too loud</div>
+          <div className="subrow">
+            <div className="subrow-lbl">Image Recipe</div>
+            <div className="pills">{VISUAL_RECIPES.map(it=><button key={it.v} className={`pill ${recipe===it.v?"on":""}`} onClick={()=>setRecipe(recipe===it.v?null:it.v)}>{it.label}</button>)}</div>
+          </div>
+          <div className="subrow" style={{marginTop:"0.65rem"}}>
+            <div className="subrow-lbl">Palette Discipline</div>
+            <div className="pills">{PALETTES.map(it=><button key={it.label} className={`pill ${palette===it.v?"on":""}`} onClick={()=>setPalette(palette===it.v?null:it.v)}>{it.label}</button>)}</div>
+          </div>
+          <div className="subrow" style={{marginTop:"0.65rem"}}>
+            <div className="subrow-lbl">Era Anchor</div>
+            <div className="pills">{ERAS.map(it=><button key={it.label} className={`pill ${era===it.v?"on":""}`} onClick={()=>setEra(era===it.v?null:it.v)}>{it.label}</button>)}</div>
+          </div>
+          <div className="subrow" style={{marginTop:"0.65rem"}}>
+            <div className="subrow-lbl">Texture / Atmosphere</div>
+            <div className="pills">{TEXTURE_ATMOS.map(it=><button key={it.v} className={`pill ${texture===it.v?"on":""}`} onClick={()=>setTexture(texture===it.v?null:it.v)}>{it.label}</button>)}</div>
+          </div>
+        </div>
+
+        <div className="div"/>
+
+        {/* 03 SUBJECT */}
+        <div className="sec">
+          <SH n={3} t="Who's in it?"/>
           <div className="subrows">
             <div className="subrow">
               <div className="subrow-lbl">Group Size</div>
@@ -680,7 +778,7 @@ function App(){
 
         {/* 03 WHERE */}
         <div className="sec">
-          <SH n={3} t="Where?"/>
+          <SH n={4} t="Where?"/>
           <div className="stabs">
             {Object.keys(SETTINGS).map(cat=><button key={cat} className={`stab ${scat===cat?"on":""}`} onClick={()=>changeScat(cat)}>{cat}</button>)}
           </div>
@@ -694,7 +792,7 @@ function App(){
 
         {/* 04 LIGHT & TIME */}
         <div className="sec">
-          <SH n={4} t="Light & Time"/>
+          <SH n={5} t="Light & Time"/>
           <PillGroup items={TIMES} val={time} onToggle={setTime}/>
         </div>
 
@@ -702,7 +800,7 @@ function App(){
 
         {/* 05 THE FEELING */}
         <div className="sec">
-          <SH n={5} t="The Feeling"/>
+          <SH n={6} t="The Feeling"/>
           <PillGroup items={MOODS} val={mood} onToggle={setMood}/>
         </div>
 
@@ -710,7 +808,7 @@ function App(){
 
         {/* 06 CAMERA */}
         <div className="sec">
-          <SH n={6} t="Camera Angle"/>
+          <SH n={7} t="Camera Angle"/>
           <PillGroup items={CAMERAS} val={cam} onToggle={setCam}/>
         </div>
 
@@ -718,7 +816,7 @@ function App(){
 
         {/* 07 CUSTOM */}
         <div className="sec">
-          <SH n={7} t="Anything Else?"/>
+          <SH n={8} t="Anything Else?"/>
           <FL c="Specific details, objects, colors, textures — things the buttons don't cover"/>
           <textarea className="custom-in" value={custom} onChange={e=>setCustom(e.target.value)}
             placeholder="e.g. her jacket is slightly wet, a blurred taxi in the background, steam rising from a grate nearby..."/>
@@ -728,7 +826,7 @@ function App(){
 
         {/* 08 PARAMS */}
         <div className="sec">
-          <SH n={8} t="Output Settings"/>
+          <SH n={9} t="Output Settings"/>
           <div className="field">
             <FL c="Aspect Ratio"/>
             <div className="pills">
@@ -744,6 +842,30 @@ function App(){
               style={{background:`linear-gradient(to right,var(--pri) 0%,var(--pri) ${((styl-50)/850)*100}%,var(--bdH) ${((styl-50)/850)*100}%,var(--bdH) 100%)`}}
               onChange={e=>setStyl(parseInt(e.target.value))}/>
             <div className="szones"><span>Literal / photo</span><span>Cinematic</span><span>Painterly</span><span>MJ takes over</span></div>
+          </div>
+          <div className="slider-wrap" style={{marginTop:"0.9rem"}}>
+            <div className="slider-row">
+              <FL c="Chaos" note={<span style={{fontSize:"0.52rem",color:"var(--di)"}}>--chaos</span>}/>
+              <span className="slider-val">{chaos}</span>
+            </div>
+            <input type="range" min={0} max={80} value={chaos}
+              style={{background:`linear-gradient(to right,var(--sec) 0%,var(--sec) ${(chaos/80)*100}%,var(--bdH) ${(chaos/80)*100}%,var(--bdH) 100%)`}}
+              onChange={e=>setChaos(parseInt(e.target.value))}/>
+            <div className="szones"><span>Locked in</span><span>Some surprise</span><span>Wild cards</span><span>Chaos beast</span></div>
+          </div>
+          <div className="slider-wrap" style={{marginTop:"0.9rem"}}>
+            <div className="slider-row">
+              <FL c="Weird" note={<span style={{fontSize:"0.52rem",color:"var(--di)"}}>--weird</span>}/>
+              <span className="slider-val">{weird}</span>
+            </div>
+            <input type="range" min={0} max={1000} value={weird}
+              style={{background:`linear-gradient(to right,var(--sec) 0%,var(--sec) ${(weird/1000)*100}%,var(--bdH) ${(weird/1000)*100}%,var(--bdH) 100%)`}}
+              onChange={e=>setWeird(parseInt(e.target.value))}/>
+            <div className="szones"><span>Normal</span><span>Odd</span><span>Strange</span><span>Dream machine</span></div>
+          </div>
+          <div className="pills" style={{marginTop:"0.9rem"}}>
+            <button className={`pill ${raw?"on":""}`} onClick={()=>setRaw(!raw)}>Style Raw</button>
+            <button className={`pill ${noText?"on":""}`} onClick={()=>setNoText(!noText)}>No Text / Logos</button>
           </div>
         </div>
 
