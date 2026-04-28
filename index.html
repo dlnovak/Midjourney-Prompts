@@ -224,6 +224,9 @@ const RATIOS=[
 function buildPrompt({mode,subject,settingObj,styleObj,style2Obj,moodObj,timeObj,cameraObj,ratio,stylize,custom}){
   const p=[];
   const sv = settingObj ? settingObj.v : "";
+  // Subject gets wrapped in a scene-leading phrase so it reads as the focal point
+  const subjectPhrase = subject ? `featuring ${subject}` : "";
+  const camV = cameraObj ? cameraObj.v : "";
 
   if(mode==="photo"){
     const st = styleObj ? styleObj.v : "a color photograph";
@@ -231,7 +234,7 @@ function buildPrompt({mode,subject,settingObj,styleObj,style2Obj,moodObj,timeObj
     if(subject) p.push(`of ${subject}`);
     if(sv) p.push(sv);
     if(timeObj) p.push(timeObj.v);
-    if(cameraObj) p.push(cameraObj.v);
+    if(camV) p.push(camV);
     if(moodObj) p.push(moodObj.v);
     if(custom) p.push(custom);
     p.push("natural depth of field, realistic proportions");
@@ -240,11 +243,12 @@ function buildPrompt({mode,subject,settingObj,styleObj,style2Obj,moodObj,timeObj
     const st = styleObj ? styleObj.v : "ultra photorealistic cinematic wide angle shot";
     p.push(st);
     if(sv) p.push(sv);
-    if(subject) p.push(subject);
+    if(subjectPhrase) p.push(subjectPhrase);
     if(timeObj) p.push(timeObj.v);
+    if(camV) p.push(camV);
     if(moodObj) p.push(moodObj.v);
     if(custom) p.push(custom);
-    p.push("emphasizing the monumental scale, streams of people in the distance");
+    p.push("emphasizing the monumental scale");
     const r2 = style2Obj ? style2Obj.v : "Hyperrealistic CGI, Octane Render, Unreal Engine, physically based materials, ray traced reflections, global illumination";
     p.push(r2);
   }
@@ -252,9 +256,11 @@ function buildPrompt({mode,subject,settingObj,styleObj,style2Obj,moodObj,timeObj
     const st = styleObj ? styleObj.v : "detailed digital illustration";
     p.push(st);
     if(style2Obj) p.push(style2Obj.v);
+    // Subject is the main event in illustrated — put it front and center after style
     if(subject) p.push(subject);
     if(sv) p.push(sv);
     if(timeObj) p.push(timeObj.v);
+    if(camV) p.push(camV);
     if(moodObj) p.push(moodObj.v);
     if(custom) p.push(custom);
     p.push("gentle ambient lighting, natural warm color palette");
@@ -266,6 +272,7 @@ function buildPrompt({mode,subject,settingObj,styleObj,style2Obj,moodObj,timeObj
     if(subject) p.push(subject);
     if(sv) p.push(sv);
     if(timeObj) p.push(timeObj.v);
+    if(camV) p.push(camV);
     if(moodObj) p.push(moodObj.v);
     if(custom) p.push(custom);
     p.push("dramatic chiaroscuro lighting, deeply detailed and richly textured");
@@ -274,9 +281,10 @@ function buildPrompt({mode,subject,settingObj,styleObj,style2Obj,moodObj,timeObj
     const st = styleObj ? styleObj.v : "cozy aesthetic scene";
     p.push(st);
     if(style2Obj) p.push(style2Obj.v);
-    if(subject) p.push(subject);
+    if(subjectPhrase) p.push(subjectPhrase);
     if(sv) p.push(sv);
     if(timeObj) p.push(timeObj.v);
+    if(camV) p.push(camV);
     if(moodObj) p.push(moodObj.v);
     if(custom) p.push(custom);
     p.push("soft dreamy atmosphere, gentle color palette");
