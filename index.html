@@ -1,0 +1,1228 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MidJourney Environment Prompt Builder</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.3.1/umd/react.production.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.3.1/umd/react-dom.production.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.5/babel.min.js"></script>
+  <style>
+    body { margin: 0; padding: 0; background: #060810; }
+    /* API key banner */
+    #api-banner {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 9999;
+      background: #0f1120; border-bottom: 1px solid #363c5a;
+      padding: 0.5rem 1.25rem;
+      display: flex; align-items: center; gap: 0.75rem;
+    }
+    #api-banner label {
+      font-family: monospace; font-size: 0.65rem; letter-spacing: 0.12em;
+      text-transform: uppercase; color: #00b8cc; white-space: nowrap;
+    }
+    #api-key-input {
+      flex: 1; background: #060810; border: 1px solid #363c5a;
+      color: #f0ece0; padding: 0.3rem 0.6rem;
+      font-family: monospace; font-size: 0.75rem; border-radius: 2px;
+      outline: none;
+    }
+    #api-key-input:focus { border-color: #ffe040; }
+    #api-key-save {
+      background: #ffe040; border: none; color: #060810;
+      font-family: monospace; font-size: 0.65rem; font-weight: 700;
+      letter-spacing: 0.1em; text-transform: uppercase;
+      padding: 0.3rem 0.8rem; border-radius: 2px; cursor: pointer;
+    }
+    #api-key-save:hover { background: #fff068; }
+    #api-banner.hidden { display: none; }
+    #app-root { padding-top: 42px; }
+  </style>
+</head>
+<body>
+
+  <!-- API Key Banner -->
+  <div id="api-banner">
+    <label>Anthropic API Key</label>
+    <input id="api-key-input" type="password" placeholder="sk-ant-..." spellcheck="false" />
+    <button id="api-key-save">Save</button>
+  </div>
+
+  <div id="app-root"></div>
+
+  <script>
+    // Restore saved key on load
+    (function() {
+      const saved = localStorage.getItem("mj_api_key");
+      if (saved) {
+        window.__MJ_API_KEY__ = saved;
+        document.getElementById("api-key-input").value = saved;
+      }
+      document.getElementById("api-key-save").addEventListener("click", function() {
+        const val = document.getElementById("api-key-input").value.trim();
+        if (val) {
+          window.__MJ_API_KEY__ = val;
+          localStorage.setItem("mj_api_key", val);
+          const btn = document.getElementById("api-key-save");
+          btn.textContent = "Saved ✓";
+          setTimeout(() => btn.textContent = "Save", 1500);
+        }
+      });
+    })();
+
+    // Destructure React hooks for use without imports
+    const { useState, useMemo, useRef, useCallback } = React;
+  </script>
+
+  <script type="text/babel">
+
+// ─────────────────────────────────────────────
+// DATA  —  every item is { label, value }
+// label = what the user reads
+// value = what goes into the MidJourney prompt
+// ─────────────────────────────────────────────
+
+const LOCATION_CATS = {
+  "Real World": [
+    { label: "Modern downtown — glass towers, urban plaza, financial district energy", value: "modern glass skyscraper downtown district" },
+    { label: "Resort beach town — white sand, palm trees, vacation hotels and promenades", value: "tropical resort beach town" },
+    { label: "Quiet suburb — tree-lined streets, houses with lawns, ordinary and still", value: "quiet suburban neighborhood" },
+    { label: "Old European city square — cobblestones, church, café terraces, pigeons", value: "old European city square" },
+    { label: "Busy street market — daytime crowds, colorful stalls, layered noise", value: "busy outdoor street market" },
+    { label: "Mediterranean coastal village — white buildings, blue sea, hillside terraces", value: "Mediterranean coastal village" },
+    { label: "Tropical island beach — crystal water, pure nature, no buildings in sight", value: "tropical island beach" },
+    { label: "Mountain ski resort — snow, timber chalets, gondola cables, alpine village", value: "mountain ski resort village" },
+    { label: "Vineyard in rolling hills — rows of vines, winery stone buildings, golden light", value: "vineyard in rolling countryside hills" },
+    { label: "Open farmland countryside — fields, barns, rolling hills, enormous sky", value: "open farmland countryside" },
+    { label: "Fishing harbor town — working boats, nets drying, weathered docks", value: "fishing harbor town" },
+    { label: "Desert highway town — roadside diner, flat scrub distance, heat shimmer", value: "desert highway roadside town" },
+    { label: "Prairie grassland — completely flat, windswept grass, sky takes over everything", value: "open prairie grassland" },
+    { label: "Rainforest — humid, layered canopy, rivers, constant green everywhere", value: "dense tropical rainforest" },
+    { label: "Ancient city ruins (real) — Pompeii or Petra scale, stone streets, history", value: "ancient historical ruins site" },
+    { label: "Cliffside fishing village — weathered wood, narrow paths, sea far below", value: "coastal cliffside village" },
+    { label: "Remote island monastery — stone walls, sea wind, steep cliffs, isolation", value: "remote island monastery" },
+  ],
+  "Cinematic": [
+    { label: "Flooded gothic cathedral — stone arches half-submerged in dark still water", value: "flooded gothic cathedral interior" },
+    { label: "Rainy noir city — neon reflecting on wet asphalt, crowded vertical streets", value: "rainy noir vertical city street" },
+    { label: "Abandoned industrial waterfront — rusted docks, cranes, complete silence", value: "abandoned industrial waterfront" },
+    { label: "Arctic research station — metal structures in endless white, total isolation", value: "arctic tundra research station" },
+    { label: "Ancient forest — moss, enormous roots, towering canopy, filtered green light", value: "ancient temperate forest" },
+    { label: "Desert megastructure — brutal concrete monolith rising from endless sand", value: "brutalist desert megastructure" },
+    { label: "Tidal flats at low water — vast wet grey mud stretching to a distant horizon", value: "tidal flats at low tide" },
+    { label: "Crumbling Soviet housing blocks — massive grey towers, broken windows, decay", value: "crumbling Soviet-era housing district" },
+    { label: "Ancient temple complex overtaken by jungle — roots splitting every stone", value: "ancient temple complex reclaimed by forest" },
+    { label: "Mountain fortress at a high pass — stone walls, sheer drops, cold wind", value: "mountain fortress pass" },
+    { label: "Salt flat plain — blinding white, mirror-perfect water reflections, sky doubled", value: "vast salt flat plain" },
+    { label: "Volcanic highland — black rock fields, ash drifting, dramatic ridgelines", value: "volcanic highland plateau" },
+    { label: "Jungle canopy settlement — wooden platforms high in the treetops, no ground", value: "jungle canopy settlement" },
+    { label: "Sunken ruins — ancient structures submerged and half-visible in dark water", value: "sunken ruins below the waterline" },
+    { label: "Underground basalt city — carved from black volcanic rock, lanterns, no sky", value: "underground basalt city" },
+  ],
+  "Fantasy / Sci-Fi": [
+    { label: "Space station interior — curved corridors, zero-gravity clutter, stars outside", value: "orbital space station interior" },
+    { label: "Floating sky city — islands drifting in cloud sea, impossible bridges between", value: "floating sky city above clouds" },
+    { label: "Alien crystal cave — luminescent minerals, strange geometry, no Earth logic", value: "alien bioluminescent crystal cave" },
+    { label: "Giant mushroom forest — enormous fungi instead of trees, spore-filled air", value: "giant mushroom forest underground" },
+    { label: "Lava underworld — rivers of molten rock, black stone, fire and dark below", value: "volcanic lava underworld cavern" },
+    { label: "Ice palace — entire structure built from glacial ice, frozen halls, blue light", value: "ice palace frozen architecture" },
+    { label: "Cloud kingdom — entire civilization built on solidified clouds, eternal daylight", value: "cloud kingdom celestial architecture" },
+    { label: "Desert alien planet — twin suns, red dust, alien outpost buildings, strange sky", value: "alien desert planet outpost" },
+    { label: "Jungle alien moon — dense strange plant life, bioluminescent, unusual light color", value: "alien jungle moon settlement" },
+    { label: "Clockwork city — enormous gears and steam pipes forming the entire cityscape", value: "giant clockwork steampunk city" },
+    { label: "Post-apocalyptic overgrown city — skyscrapers collapsed, nature fully reclaimed", value: "post-apocalyptic overgrown city ruins" },
+    { label: "Interdimensional library — impossible spiraling scale, books to infinite height", value: "interdimensional infinite library" },
+    { label: "Ancient alien megastructure — geometry defying physics, impossible to understand", value: "ancient alien megastructure exterior" },
+    { label: "Underwater city — domed habitats on the seafloor, bioluminescent ocean around", value: "underwater domed city seafloor" },
+    { label: "Portal temple — ancient stone arch glowing, another world visible through it", value: "ancient glowing portal temple" },
+  ],
+  "Interiors": [
+    { label: "Grand railway terminus — soaring vaulted glass ceiling, platforms, travelers", value: "grand railway terminus interior" },
+    { label: "Cathedral interior — soaring nave, pews, stained glass light shafts, silence", value: "gothic cathedral interior" },
+    { label: "Great library — tall shelves reaching the ceiling, reading tables, diffused light", value: "grand library interior" },
+    { label: "Museum hall — high ceilings, artifacts on plinths, quiet reverence", value: "museum exhibition hall interior" },
+    { label: "Grand hotel lobby — marble floors, chandeliers, luxury and scale", value: "grand hotel lobby interior" },
+    { label: "Hospital corridor — long, fluorescent overhead light, clinical and cold", value: "hospital corridor interior" },
+    { label: "Shopping mall atrium — escalators, glass ceiling, retail floors stacked up", value: "shopping mall atrium interior" },
+    { label: "Warehouse studio — raw brick, skylights, open plan, converted industrial", value: "converted warehouse studio interior" },
+    { label: "Underground bunker — low ceilings, utility lighting, bare concrete, sealed in", value: "underground bunker interior" },
+    { label: "Luxury penthouse — floor-to-ceiling glass, city view on all sides, minimalist", value: "luxury penthouse apartment interior" },
+    { label: "Opera house interior — velvet seats, ornate balconies, chandelier, stage", value: "opera house theater interior" },
+    { label: "Subway tunnel — curved tiled walls, cables, tracks vanishing into darkness", value: "subway tunnel interior" },
+    { label: "Greenhouse / botanical garden — glass walls and roof, tropical plants, diffused light", value: "greenhouse botanical garden interior" },
+    { label: "Brutalist stairwell — raw concrete, exposed pipes, harsh geometry, echoing", value: "brutalist housing estate stairwell" },
+    { label: "Office tower floor — open plan, glass walls, city panorama, fluorescent light", value: "office tower floor interior" },
+  ],
+};
+
+const TIMES = [
+  { label: "Dawn — first pale light, sky just turning, before sunrise", value: "dawn" },
+  { label: "Early morning — soft cool light, long gentle shadows", value: "early morning" },
+  { label: "Midday — harsh overhead sun, hard shadows, bleached color", value: "midday" },
+  { label: "Golden hour — warm orange-gold light, long dramatic shadows", value: "golden hour" },
+  { label: "Blue hour — just after sunset, deep blue, city lights emerge", value: "blue hour" },
+  { label: "Dusk — fading light, sky still has color, darkness arriving", value: "dusk" },
+  { label: "Night — full darkness, only artificial or moonlight", value: "night" },
+  { label: "Polar night — months-long darkness, only aurora or starlight", value: "polar night" },
+  { label: "Eclipse — eerie mid-day darkness, ring of light at edges", value: "eclipse" },
+];
+
+const WEATHER = [
+  { label: "Clear skies — sharp edges, strong directional light, vivid color", value: "clear skies" },
+  { label: "Overcast — soft flat light, no harsh shadows, muted tones", value: "overcast" },
+  { label: "Light rain — damp surfaces, reflections beginning to form", value: "light rain" },
+  { label: "Heavy rain — low visibility, everything soaked, puddles everywhere", value: "heavy rain" },
+  { label: "Snowfall — muffled silence, white accumulation, reduced contrast", value: "snowfall" },
+  { label: "Blizzard — near-zero visibility, wind-driven white chaos", value: "blizzard" },
+  { label: "Fog — objects fade quickly, haunting depth, soft edges", value: "fog" },
+  { label: "Haze — distant things go pale blue, layered depth", value: "haze" },
+  { label: "Dust storm — orange-brown cloud wall, filtered angry light", value: "dust storm" },
+  { label: "Approaching storm — dark front on horizon, charged air, stillness", value: "approaching storm" },
+  { label: "After the storm — wet everything, clearing sky, washed clean", value: "after the storm" },
+  { label: "Heat shimmer — air visibly distorting above hot surfaces", value: "heat shimmer" },
+];
+
+const ARCH_STYLES = [
+  { label: "Brutalist — raw concrete, monolithic slabs, no ornamentation", value: "brutalist concrete" },
+  { label: "Gothic — soaring stone arches, carved detail, medieval cathedral scale", value: "gothic carved stone" },
+  { label: "Cyberpunk — layered neon signs, dense wiring, vertical chaos", value: "cyberpunk neon-lit" },
+  { label: "Ancient hewn stone — hand-cut rock, pre-modern, monumental", value: "ancient hewn rock" },
+  { label: "Biophilic — living walls, timber and plants woven into structure", value: "organic biophilic" },
+  { label: "Derelict industrial — broken machinery, shattered glass, total abandonment", value: "derelict industrial" },
+  { label: "Solarpunk — green plants growing on modern structures, utopian brightness", value: "solarpunk living architecture" },
+  { label: "Art Deco — geometric ornament, gold and black, 1920s glamour", value: "Art Deco geometric" },
+  { label: "Soviet monumental — crushing symmetry, state-scale propaganda architecture", value: "Soviet monumental" },
+  { label: "Vernacular coastal — humble fishing village materials, weathered and practical", value: "vernacular coastal" },
+  { label: "Sci-fi megastructure — city-scale engineering, orbital platforms, impossible scale", value: "sci-fi megastructure" },
+  { label: "Medieval fortification — castle walls, battlements, towers, arrow slits", value: "medieval fortification" },
+  { label: "Post-apocalyptic — scavenged materials, collapse and makeshift rebuild", value: "post-apocalyptic salvaged" },
+  { label: "Japanese vernacular — timber and paper, low rooflines, garden integration", value: "Japanese vernacular" },
+];
+
+const MATERIALS = [
+  { label: "Weathered cedar — bleached grey wood, old and dry", value: "weathered cedar" },
+  { label: "Raw concrete — rough grey slab, cold and heavy", value: "raw concrete" },
+  { label: "Dark basalt — black volcanic rock, sharp and textured", value: "dark basalt" },
+  { label: "Rusted corrugated metal — orange-brown industrial sheeting", value: "rusted corrugated metal" },
+  { label: "Mossy stone — ancient rock covered in soft green growth", value: "mossy stone" },
+  { label: "Polished dark glass — black mirror, reflective, modern", value: "polished dark glass" },
+  { label: "Cracked ceramic tile — broken white/grey floor or wall surface", value: "cracked ceramic tile" },
+  { label: "Frost-covered steel — cold metal with ice crystals forming", value: "frost-covered steel" },
+  { label: "Volcanic rock — rough porous lava stone, black or red-brown", value: "volcanic rock" },
+  { label: "Aged brick — old red or brown brick, mortar crumbling", value: "aged brick" },
+  { label: "Wet cobblestone — round stones glistening with rain", value: "wet cobblestone" },
+  { label: "Corroded copper — blue-green oxidation on aged metal", value: "corroded copper" },
+  { label: "Bleached driftwood — pale sun-dried wood, smooth and stripped", value: "bleached driftwood" },
+  { label: "Black iron — heavy dark metal bars, gates, old industry", value: "black iron" },
+  { label: "Sand-eroded sandstone — soft stone worn smooth by wind and time", value: "sand-eroded sandstone" },
+];
+
+const FOREGROUNDS = [
+  { label: "Cracked pavement with standing puddles reflecting the sky above", value: "cracked pavement and standing puddles" },
+  { label: "Wet mossy stones with shallow water pools between them", value: "wet mossy stones and shallow pools" },
+  { label: "Tall grass silhouettes and seed heads blowing in wind", value: "tall grass silhouettes and seed heads" },
+  { label: "Discarded industrial machinery — gears, pipes, broken parts", value: "discarded industrial machinery" },
+  { label: "Snowdrifts piled against metal walkways and walls", value: "snowdrifts piled against metal walkways" },
+  { label: "Tidal pools and wet sand with shells and pebbles", value: "tidal pools and wet sand" },
+  { label: "Dry grasses and drifting dust — parched and windswept", value: "dry grasses and drifting dust" },
+  { label: "Coiled rope on worn dock planks, salt-stained", value: "coiled rope on worn dock planks" },
+  { label: "Moss-covered tree roots spreading across the ground", value: "moss-covered tree roots" },
+  { label: "Broken ceramic tile fragments scattered across the floor", value: "broken ceramic tile" },
+  { label: "Fallen leaves floating on dark still water", value: "fallen leaves in dark water" },
+  { label: "Rusted iron railing, flaking and pitted", value: "rusted iron railing" },
+  { label: "Tangled roots and dense undergrowth at ground level", value: "tangled roots and undergrowth" },
+  { label: "Ash and slowly cooling embers still glowing faintly", value: "ash and cooling embers" },
+  { label: "Frost-cracked stone steps, each joint split by ice", value: "frost-cracked stone steps" },
+  { label: "Shallow reflective water — a thin film mirroring everything above", value: "shallow reflective water" },
+];
+
+const MIDGROUNDS = [
+  { label: "Narrow winding alley between tall walls — barely lit", value: "narrow winding alley" },
+  { label: "Ruined stone courtyard — broken columns, collapsed arches", value: "ruined stone courtyard" },
+  { label: "Ancient stone temple steps leading upward", value: "ancient temple steps" },
+  { label: "Market stalls under worn canopies — packed and layered", value: "market stalls under worn canopies" },
+  { label: "Abandoned factory floor — old machinery, broken skylights", value: "abandoned factory floor" },
+  { label: "Glass atrium interior — soaring walls of glass and steel", value: "glass atrium interior" },
+  { label: "Cliffside village terraces stepping down the rock face", value: "cliffside village terraces" },
+  { label: "Dense pine forest floor — dark, carpeted with needles", value: "dense pine forest floor" },
+  { label: "Stone bridge arching over dark still water below", value: "stone bridge over dark water" },
+  { label: "Industrial catwalk network — metal grating, exposed pipes", value: "industrial catwalk network" },
+  { label: "Quiet residential street — empty, between houses", value: "quiet residential street" },
+  { label: "Railway platform at night — dim lights, empty tracks", value: "railway platform at night" },
+  { label: "Crumbling fortress walls — gaps, fallen stones, decay", value: "crumbling fortress walls" },
+  { label: "Underground plaza carved from rock — pillars, lanterns", value: "underground plaza" },
+  { label: "Overgrown courtyard — plants reclaiming a dead fountain", value: "overgrown courtyard with dead fountain" },
+];
+
+const BACKGROUNDS = [
+  { label: "Distant mountains slowly dissolving into blue atmospheric haze", value: "distant mountains fading into blue haze" },
+  { label: "Storm front building on the horizon — dark wall of cloud", value: "storm front building on the horizon" },
+  { label: "Sunken towers barely visible beneath dark murky water", value: "sunken towers below dark water" },
+  { label: "Radio masts and clouds lit by moonlight above", value: "radio masts and moonlit clouds" },
+  { label: "Ancient wall stretching to the horizon in both directions", value: "ancient wall stretching to the horizon" },
+  { label: "Ocean haze blending water and sky into grey-white nothing", value: "ocean haze and the far horizon" },
+  { label: "Cloudbank slowly rolling in behind distant hills", value: "cloudbank rolling behind the hills" },
+  { label: "Distant cathedral spires barely visible in the mist", value: "distant cathedral spires" },
+  { label: "Low industrial skyline on the horizon — chimneys and cranes", value: "low industrial skyline" },
+  { label: "Aurora borealis — green and violet light rippling above", value: "aurora above the ridge" },
+  { label: "City lights smeared by rain across the far distance", value: "city lights blurred by rain" },
+  { label: "Volcanic plume rising slow and massive on the horizon", value: "volcanic plume on the horizon" },
+  { label: "Vast canyon walls stretching back and fading into haze", value: "vast canyon walls receding into atmosphere" },
+  { label: "Endless forest canopy fading pale towards the horizon", value: "endless forest canopy fading to haze" },
+  { label: "Orbital ring structure visible faintly through overcast sky", value: "orbital ring visible through overcast atmosphere" },
+];
+
+const LIGHTING = {
+  "Soft / Natural": [
+    { label: "Overcast — soft, shadow-free, even light over everything", value: "soft overcast light" },
+    { label: "Window light — diffused indoor glow from a nearby window", value: "diffused window light" },
+    { label: "Open sky light — cool ambient from the sky above, no sun", value: "ambient skylight" },
+    { label: "Open shade — bright but indirect, color stays neutral", value: "open shade" },
+    { label: "Early morning — gentle pale light, almost no shadows yet", value: "soft morning light" },
+    { label: "Golden hour backlight — warm rim around every silhouette", value: "golden hour backlight" },
+    { label: "Blue hour — post-sunset deep blue, artificial lights glow", value: "blue hour ambient light" },
+    { label: "Cloud-filtered sun — light changes second to second through clouds", value: "cloud-filtered sunlight" },
+    { label: "Soft reflected light — bounced off a bright wall or water nearby", value: "soft reflected light" },
+  ],
+  "Dramatic": [
+    { label: "Hard side light — one side bright, the other near-black", value: "hard side light" },
+    { label: "Low sun raking across surface — every texture carved in shadow", value: "low-angle sunlight raking across surface" },
+    { label: "Strong backlight — subject almost silhouetted, light behind them", value: "strong backlight" },
+    { label: "Rim lighting — thin bright edge around a subject, rest in shadow", value: "rim lighting" },
+    { label: "Single source — one lamp or window, everything else dark", value: "single-source lighting" },
+    { label: "Extreme contrast — deep black shadow with one bright lit area", value: "chiaroscuro lighting" },
+    { label: "Deep shadow with contrast — underlit, shadows dominant", value: "deep shadow contrast" },
+    { label: "Long angular shadows stretching across the ground", value: "long angular shadows" },
+  ],
+  "Volumetric": [
+    { label: "Visible light beams — shafts of light you can actually see in the air", value: "volumetric light shafts" },
+    { label: "God rays through fog — dramatic beams cutting through mist", value: "god rays through fog" },
+    { label: "Sunbeams in dust — light shafts made visible by floating particles", value: "sunbeams cutting through dust" },
+    { label: "Glowing haze — airborne moisture catching and scattering light", value: "haze catching the light" },
+    { label: "Backlit mist — fog lit from behind, glowing softly around shapes", value: "mist glowing in backlight" },
+    { label: "Smoke-filled air — thick atmosphere that light has to push through", value: "smoke-filled atmosphere" },
+    { label: "Lantern glow — warm diffused light from a practical indoor source", value: "diffused lantern glow" },
+    { label: "Beams through broken windows — shafts entering a dark abandoned space", value: "light beams through broken windows" },
+  ],
+  "Urban / Artificial": [
+    { label: "Orange street lamps — sodium vapor glow, everything cast in amber", value: "sodium vapor streetlights" },
+    { label: "Neon reflected in wet pavement — colored light pooling on rain slick", value: "neon spill on wet asphalt" },
+    { label: "Fluorescent overhead — harsh flat institutional lighting from above", value: "fluorescent overhead lights" },
+    { label: "Flickering signs — unstable electric light, on-off-on", value: "flickering signage glow" },
+    { label: "LED panel reflections — cold blue-white modern light bouncing off surfaces", value: "LED panel reflections" },
+    { label: "Headlights in rain — car beams diffused into soft cones by wet air", value: "headlights diffused by rain" },
+    { label: "Monitor glow — cool blue-white lit face or room from a screen", value: "cool monitor light" },
+    { label: "Warm lamps — practical domestic lighting, incandescent warmth", value: "warm practical lamps" },
+    { label: "Emergency blue lighting — cold blue emergency lights in a dark space", value: "blue emergency lighting" },
+  ],
+  "Epic Natural": [
+    { label: "Break in the storm — single shaft of light through dark clouds", value: "stormlight breaking through clouds" },
+    { label: "Eclipse lighting — eerie premature darkness, dim ring-lit horizon", value: "eclipse lighting" },
+    { label: "Sun behind mountains — glowing silhouette, light spilling around edges", value: "low sun behind mountains" },
+    { label: "Moonlight — cold silver illumination, sharp shadows, night clarity", value: "silver moonlight" },
+    { label: "Dawn spilling over ridges — first warm light pouring over high ground", value: "dawn light spilling over ridges" },
+    { label: "Sunset through dust — orange-red sun filtered through haze, apocalyptic", value: "sunset through dust clouds" },
+    { label: "Lightning flash — instant full-scene illumination, purple-white", value: "lightning illuminating stormclouds" },
+    { label: "Sunbeams over a valley — multiple shafts fanning down from above", value: "sunbeams breaking over a valley" },
+    { label: "Bioluminescence — living organisms glowing softly in darkness, blue-green", value: "bioluminescence" },
+  ],
+};
+
+const PARTICLES = [
+  { label: "Mist — thin moisture, objects fade gently at distance", value: "mist" },
+  { label: "Fog — thick white-grey, nearby shapes go soft, far ones vanish", value: "fog" },
+  { label: "Haze — heat or smoke making distant things go pale and blue", value: "haze" },
+  { label: "Smoke — dark grey-black billowing plumes, obscures and dirties", value: "smoke" },
+  { label: "Dust — fine particles everywhere, settles on surfaces, gritty", value: "dust" },
+  { label: "Rain — falling drops, streaks of motion, wet on everything", value: "rain" },
+  { label: "Snow — white flakes falling, accumulating, silencing everything", value: "snow" },
+  { label: "Sea spray — ocean mist, salt, blown sideways in wind", value: "sea spray" },
+  { label: "Pollen — golden floating specks in spring air, dreamy", value: "pollen" },
+  { label: "Embers — glowing orange particles rising from fire below", value: "embers" },
+  { label: "Steam — rising white vapour from hot surfaces or vents", value: "steam" },
+  { label: "Ash — grey-white falling debris, everything slowly dusted", value: "ash" },
+  { label: "Spores — luminous or dark floating biological particles", value: "spores" },
+];
+
+const MOODS = [
+  { label: "Eerie / Liminal — wrong-feeling emptiness, like a place after-hours, something off", value: "eerie / liminal" },
+  { label: "Epic / Grandiose — awe-inspiring scale, ancient and immovable, civilizational weight", value: "epic / grandiose" },
+  { label: "Serene / Contemplative — morning stillness, undisturbed, sacred quiet", value: "serene / contemplative" },
+  { label: "Oppressive / Dystopian — crushing scale, architecture hostile to human presence", value: "oppressive / dystopian" },
+  { label: "Romantic / Nostalgic — golden memory, faded warmth, half-remembered beauty", value: "romantic / nostalgic" },
+  { label: "Foreboding / Tense — charged stillness, something approaching, threat implied not shown", value: "foreboding / tense" },
+];
+
+const MOOD_PHRASES = {
+  "eerie / liminal":        "liminal space, uncanny stillness, held breath, wrong hour",
+  "epic / grandiose":       "mythic scale, ancient and immovable, civilizational weight, monumental",
+  "serene / contemplative": "meditative stillness, morning quiet, undisturbed, sacred and still",
+  "oppressive / dystopian": "crushing weight, brutalist indifference, grey permanence, hostile architecture",
+  "romantic / nostalgic":   "golden memory, faded warmth, amber nostalgia, half-remembered",
+  "foreboding / tense":     "something approaching, charged stillness, before the storm, threat implied",
+};
+
+const FRAMINGS = [
+  { label: "Wide establishing — full scene visible, cinematic, shows everything", value: "wide establishing shot" },
+  { label: "Aerial / drone — looking straight down or at an angle from high above", value: "aerial drone view" },
+  { label: "Worm's-eye — camera at ground level looking up, buildings tower above", value: "low angle worm's-eye view" },
+  { label: "Bird's-eye — directly overhead, map-like, no horizon", value: "bird's-eye view" },
+  { label: "Over-the-shoulder — camera behind an implied figure, sense of presence", value: "over-the-shoulder" },
+  { label: "Tilted / dutch angle — camera rolled, creates unease and tension", value: "dutch angle" },
+  { label: "Symmetrical one-point — dead center, tunnel-like, eerie stillness", value: "centered one-point perspective" },
+  { label: "Long exposure — light streaks, water goes silky-smooth, time compressed", value: "long exposure" },
+  { label: "Extreme close-up establishing — very close foreground detail with scene behind", value: "extreme close-up establishing shot" },
+];
+
+const FOCAL_LENGTHS = [
+  { label: "14mm — extreme wide, everything distorted, spaces feel vast and imposing", value: "14mm" },
+  { label: "18mm — expansive wide angle, landscapes feel open, minimal distortion", value: "18mm" },
+  { label: "24mm — natural wide, good for streets and interior spaces", value: "24mm" },
+  { label: "28mm — naturalistic, closest to how the eye sees peripherally", value: "28mm" },
+  { label: "35mm — cinematic standard, balanced and natural feeling", value: "35mm" },
+  { label: "50mm — neutral, neither wide nor compressed, pure realism", value: "50mm" },
+  { label: "85mm — slightly compressed depth, intimate and flattering", value: "85mm" },
+  { label: "200mm — telephoto, layers flatten and stack, distance pulled close", value: "200mm" },
+  { label: "Tilt-shift — selective focus makes real scenes look like miniatures", value: "tilt-shift" },
+];
+
+const STYLES = {
+  "Photographers": [
+    { label: "Ansel Adams — dramatic black and white landscapes, extreme tonal range", value: "Ansel Adams" },
+    { label: "Gregory Crewdson — cinematic suburban scenes, perfect artificial lighting, eerie", value: "Gregory Crewdson" },
+    { label: "Michael Kenna — minimalist long-exposure landscapes, near-abstract stillness", value: "Michael Kenna" },
+    { label: "Frans Lanting — rich saturated natural environments, National Geographic quality", value: "Frans Lanting" },
+  ],
+  "Artists": [
+    { label: "Simon Stålenhag — retro-futurist rural Sweden, giant machines in quiet countryside", value: "Simon Stålenhag" },
+    { label: "Caspar David Friedrich — Romantic sublime, tiny lone figure in vast dramatic nature", value: "Caspar David Friedrich" },
+    { label: "Albert Bierstadt — epic American wilderness, golden theatrical beams, painted", value: "Albert Bierstadt" },
+    { label: "John Harris — sci-fi megastructure environments, painted, massive scale", value: "John Harris" },
+    { label: "Ian McQue — industrial floating worlds, rough ink texture, mechanical detail", value: "Ian McQue" },
+  ],
+  "Film / Render": [
+    { label: "Roger Deakins — controlled natural light, restrained, beautiful without showing off", value: "Roger Deakins cinematography" },
+    { label: "Blade Runner 2049 — cold blue darkness and warm amber tension, always raining", value: "Blade Runner 2049 color palette" },
+    { label: "Unreal Engine 5 — photorealistic with cinematic post-processing, game-engine quality", value: "Unreal Engine 5 rendered" },
+    { label: "Octane Render — ray-traced materials, near-photographic, physically accurate light", value: "Octane Render" },
+    { label: "Matte painting — epic hand-painted film environment, wide shot, layers of depth", value: "matte painting feature film production" },
+  ],
+  "Style Anchors": [
+    { label: "Cinematic concept art — polished film pre-production scene, dramatic and designed", value: "cinematic concept art" },
+    { label: "Environmental illustration — painted scene with clear narrative mood and story", value: "environmental illustration" },
+    { label: "Architectural visualization — clean precise render showing building design intent", value: "architectural visualization" },
+    { label: "Atmospheric watercolor — soft edges, color bleeds, painterly and loose", value: "atmospheric watercolor" },
+    { label: "Vintage travel photography — warm film grain, mid-century print aesthetic", value: "vintage travel photography" },
+    { label: "Dark fantasy illustration — painted, dramatic, otherworldly menace and beauty", value: "dark fantasy illustration" },
+    { label: "Brutalist render — cold concrete visualization, graphic, bleak and stark", value: "brutalist design render" },
+    { label: "Solarpunk — green plants growing on modern buildings, utopian and optimistic", value: "solarpunk biophilic" },
+    { label: "Plein air painting — loose impressionist brushwork, painted from life in natural light", value: "plein air painting" },
+  ],
+};
+
+const RATIOS = [
+  { label: "21:9 — ultra-wide cinematic", value: "21:9" },
+  { label: "16:9 — standard widescreen", value: "16:9" },
+  { label: "3:2 — photography feel", value: "3:2" },
+  { label: "4:5 — portrait / social", value: "4:5" },
+  { label: "9:16 — tall / vertical", value: "9:16" },
+  { label: "2:3 — canyon / looking up", value: "2:3" },
+  { label: "3:1 — extreme panorama", value: "3:1" },
+];
+
+const NEG_PRESETS = [
+  { label: "No people, text, watermark", value: "people, text, watermark, oversaturated" },
+  { label: "No flat lighting", value: "flat lighting" },
+  { label: "No signs / logos", value: "readable text, logos, signage" },
+  { label: "No AI-look artifacts", value: "lens flare, HDR, plastic, digital noise" },
+];
+
+// ─────────────────────────────────────────────
+// THEMES
+// ─────────────────────────────────────────────
+
+const THEMES = {
+  "cyber-noir": {
+    name: "Cyber Noir", sub: "neon city · rain-soaked streets · vertical density",
+    dot1: "#ffe040", dot2: "#00e5ff",
+    bg: "#060810", bgInput: "#0f1120", border: "#242840", borderHi: "#363c5a", pbarBg: "#080a16",
+    primary: "#ffe040", primaryGlow: "rgba(255,224,64,0.22)",
+    secondary: "#00e5ff", secondaryDim: "#00b8cc", secondaryGlow: "rgba(0,229,255,0.18)",
+    text: "#f0ece0", muted: "#a8a4c0", dim: "#5a5878", promptText: "#d0c890",
+    gridColor: "rgba(0,229,255,0.018)", arrowHex: "%23ffe040",
+    headerLine: "linear-gradient(90deg,transparent,#00e5ff,#ffe040,transparent)", sectionAccent: "#00e5ff",
+  },
+  "wasteland": {
+    name: "Wasteland", sub: "desert megastructure · brutal heat · dust and ash",
+    dot1: "#ff6a20", dot2: "#c89030",
+    bg: "#0e0804", bgInput: "#180f07", border: "#3a2010", borderHi: "#503018", pbarBg: "#120a04",
+    primary: "#ff6a20", primaryGlow: "rgba(255,106,32,0.22)",
+    secondary: "#c89030", secondaryDim: "#a07020", secondaryGlow: "rgba(200,144,48,0.18)",
+    text: "#f0e4d0", muted: "#c0a080", dim: "#604030", promptText: "#d4b070",
+    gridColor: "rgba(255,106,32,0.015)", arrowHex: "%23ff6a20",
+    headerLine: "linear-gradient(90deg,transparent,#c89030,#ff6a20,transparent)", sectionAccent: "#c89030",
+  },
+  "biopunk": {
+    name: "Biopunk", sub: "bioluminescent jungle · ancient growth · alien spores",
+    dot1: "#00ff88", dot2: "#80ff40",
+    bg: "#040c06", bgInput: "#08130a", border: "#0e2814", borderHi: "#163c1e", pbarBg: "#060e08",
+    primary: "#00ff88", primaryGlow: "rgba(0,255,136,0.2)",
+    secondary: "#80ff40", secondaryDim: "#50cc20", secondaryGlow: "rgba(128,255,64,0.15)",
+    text: "#e8f4e0", muted: "#88c098", dim: "#305040", promptText: "#a0d890",
+    gridColor: "rgba(0,255,136,0.018)", arrowHex: "%2300ff88",
+    headerLine: "linear-gradient(90deg,transparent,#80ff40,#00ff88,transparent)", sectionAccent: "#80ff40",
+  },
+  "polar": {
+    name: "Polar Void", sub: "arctic night · liminal stillness · eerie and vast",
+    dot1: "#90c8f8", dot2: "#dff0ff",
+    bg: "#050810", bgInput: "#090e1e", border: "#182038", borderHi: "#243050", pbarBg: "#070a18",
+    primary: "#90c8f8", primaryGlow: "rgba(144,200,248,0.2)",
+    secondary: "#dff0ff", secondaryDim: "#a8d4f0", secondaryGlow: "rgba(223,240,255,0.15)",
+    text: "#eaf4ff", muted: "#8898b8", dim: "#384460", promptText: "#88b8d8",
+    gridColor: "rgba(144,200,248,0.018)", arrowHex: "%2390c8f8",
+    headerLine: "linear-gradient(90deg,transparent,#a8d4f0,#dff0ff,transparent)", sectionAccent: "#a8d4f0",
+  },
+  "gothic": {
+    name: "Gothic Ruin", sub: "flooded cathedrals · dark fantasy · stone and shadow",
+    dot1: "#e040a8", dot2: "#9040cc",
+    bg: "#090508", bgInput: "#140a14", border: "#2a1428", borderHi: "#3e1e3c", pbarBg: "#0c0710",
+    primary: "#e040a8", primaryGlow: "rgba(224,64,168,0.22)",
+    secondary: "#9040cc", secondaryDim: "#7030a8", secondaryGlow: "rgba(144,64,204,0.18)",
+    text: "#f0e4f0", muted: "#c098c0", dim: "#5e3860", promptText: "#c898c8",
+    gridColor: "rgba(224,64,168,0.015)", arrowHex: "%23e040a8",
+    headerLine: "linear-gradient(90deg,transparent,#9040cc,#e040a8,transparent)", sectionAccent: "#9040cc",
+  },
+};
+
+// ─────────────────────────────────────────────
+// SYSTEM PROMPT — uses .value strings only
+// ─────────────────────────────────────────────
+
+function buildSystemPrompt() {
+  const vals = (arr) => arr.map(x => x.value);
+  const allLighting = Object.values(LIGHTING).flat().map(x => x.value);
+  return `You are a MidJourney environment prompt analyst. Analyze the image and map it to EXACT value strings from the lists below.
+
+RULES:
+- Only use strings exactly as shown. If nothing fits, use null.
+- Arrays: up to 4 items.
+- stylize: 50-150 photorealistic, 150-300 cinematic, 400-600 artistic, 750+ painterly
+- chaos: 0-5 structured, 10-20 slight, 25-50 organic, 75+ unpredictable
+- Return ONLY raw JSON. No markdown, no explanation.
+
+LOCATIONS: ${JSON.stringify(Object.values(LOCATION_CATS).flat().map(x=>x.value))}
+TIMES: ${JSON.stringify(vals(TIMES))}
+WEATHER: ${JSON.stringify(vals(WEATHER))}
+ARCH_STYLES: ${JSON.stringify(vals(ARCH_STYLES))}
+MATERIALS: ${JSON.stringify(vals(MATERIALS))}
+FOREGROUNDS: ${JSON.stringify(vals(FOREGROUNDS))}
+MIDGROUNDS: ${JSON.stringify(vals(MIDGROUNDS))}
+BACKGROUNDS: ${JSON.stringify(vals(BACKGROUNDS))}
+LIGHTING: ${JSON.stringify(allLighting)}
+PARTICLES: ${JSON.stringify(vals(PARTICLES))}
+MOODS: ${JSON.stringify(vals(MOODS))}
+FRAMINGS: ${JSON.stringify(vals(FRAMINGS))}
+FOCAL_LENGTHS: ${JSON.stringify(vals(FOCAL_LENGTHS))}
+STYLES: ${JSON.stringify(Object.values(STYLES).flat().map(x=>x.value))}
+RATIOS: ${JSON.stringify(vals(RATIOS))}
+
+Return:
+{"location":string|null,"time":string|null,"weather":string|null,"archStyle":string|null,"materials":string[],"foreground":string|null,"midground":string|null,"background":string|null,"lighting":string|null,"particles":string[],"mood":string|null,"framing":string|null,"focalLen":string|null,"styleRef":string|null,"ratio":string|null,"stylize":number,"chaos":number}`;
+}
+
+function matchVal(items, val) {
+  if (!val) return null;
+  return items.find(x => x.value === val) ? val : null;
+}
+
+// ─────────────────────────────────────────────
+// BASE CSS
+// ─────────────────────────────────────────────
+
+const BASE_CSS = `
+  @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=JetBrains+Mono:wght@400;500&family=Rajdhani:wght@400;500;600&display=swap');
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  .root { min-height:100vh; background:var(--bg); background-image:linear-gradient(var(--grid-color) 1px,transparent 1px),linear-gradient(90deg,var(--grid-color) 1px,transparent 1px); background-size:44px 44px; color:var(--text); font-family:'Rajdhani',sans-serif; font-weight:400; }
+
+  .hdr { padding:1.1rem 1.25rem 0.85rem; border-bottom:1px solid var(--border); background:linear-gradient(180deg,var(--bg) 0%,transparent 100%); position:relative; overflow:hidden; }
+  .hdr::before { content:''; position:absolute; top:0; left:0; right:0; height:2px; background:var(--header-line); }
+  .hdr-eyebrow { font-family:'JetBrains Mono',monospace; font-size:0.55rem; letter-spacing:0.25em; text-transform:uppercase; color:var(--secondary-dim); margin-bottom:0.22rem; }
+  .hdr-title { font-family:'Cinzel',serif; font-size:1.15rem; font-weight:700; letter-spacing:0.1em; text-transform:uppercase; color:var(--primary); text-shadow:0 0 20px var(--primary-glow),0 0 50px var(--primary-glow); }
+  .hdr-desc { font-size:0.75rem; color:var(--muted); margin-top:0.2rem; }
+
+  .theme-bar { padding:0.6rem 1.25rem 0.65rem; border-bottom:1px solid var(--border); background:var(--bg); }
+  .theme-bar-label { font-family:'JetBrains Mono',monospace; font-size:0.48rem; letter-spacing:0.22em; text-transform:uppercase; color:var(--dim); margin-bottom:0.4rem; }
+  .theme-pills { display:flex; gap:0.4rem; flex-wrap:wrap; }
+  .theme-pill { display:flex; align-items:center; gap:0.45rem; padding:0.28rem 0.65rem 0.28rem 0.4rem; border:1px solid var(--border-hi); background:transparent; cursor:pointer; border-radius:2px; transition:all 0.15s; }
+  .theme-pill:hover { border-color:var(--primary); }
+  .theme-pill.on { border-color:var(--primary); background:var(--primary-glow); box-shadow:0 0 10px var(--primary-glow); }
+  .theme-swatch { width:16px; height:16px; border-radius:50%; flex-shrink:0; border:1px solid rgba(255,255,255,0.12); }
+  .theme-pill-name { font-family:'Rajdhani',sans-serif; font-size:0.75rem; font-weight:600; letter-spacing:0.04em; color:var(--muted); white-space:nowrap; }
+  .theme-pill.on .theme-pill-name { color:var(--primary); }
+
+  /* SCAN */
+  .scan-panel { padding:0.75rem 1.25rem 0.85rem; border-bottom:1px solid var(--border); background:linear-gradient(180deg,var(--bg) 0%,transparent 100%); }
+  .scan-panel-head { display:flex; align-items:center; justify-content:space-between; margin-bottom:0.55rem; }
+  .scan-panel-label { font-family:'JetBrains Mono',monospace; font-size:0.52rem; letter-spacing:0.2em; text-transform:uppercase; color:var(--secondary-dim); }
+  .scan-panel-sub { font-size:0.68rem; color:var(--dim); }
+  .scan-clear-btn { background:none; border:none; font-family:'JetBrains Mono',monospace; font-size:0.5rem; color:var(--dim); cursor:pointer; letter-spacing:0.1em; text-transform:uppercase; transition:color 0.15s; padding:0; }
+  .scan-clear-btn:hover { color:var(--muted); }
+  .drop-zone { border:1px dashed var(--border-hi); border-radius:3px; min-height:72px; display:flex; align-items:center; justify-content:center; cursor:pointer; transition:all 0.15s; position:relative; overflow:hidden; background:var(--bg-input); }
+  .drop-zone:hover { border-color:var(--primary); }
+  .drop-zone.drag-over { border-color:var(--primary); background:var(--primary-glow); }
+  .drop-zone-inner { display:flex; flex-direction:column; align-items:center; gap:0.35rem; padding:1rem; }
+  .drop-icon { font-size:1.3rem; opacity:0.5; }
+  .drop-text { font-family:'JetBrains Mono',monospace; font-size:0.58rem; color:var(--muted); letter-spacing:0.08em; text-transform:uppercase; }
+  .drop-subtext { font-size:0.65rem; color:var(--dim); }
+  .scan-img-wrap { position:relative; width:100%; }
+  .scan-img { width:100%; display:block; max-height:180px; object-fit:cover; border-radius:2px; }
+  .scan-overlay { position:absolute; top:0; left:0; right:0; bottom:0; pointer-events:none; background:linear-gradient(180deg,transparent 0%,transparent 35%,var(--primary-glow) 48%,rgba(255,255,255,0.06) 50%,var(--primary-glow) 52%,transparent 65%,transparent 100%); animation:scanline 1.6s linear infinite; border-radius:2px; }
+  @keyframes scanline { 0%{transform:translateY(-100%)} 100%{transform:translateY(100%)} }
+  .scan-grid-overlay { position:absolute; top:0; left:0; right:0; bottom:0; pointer-events:none; border-radius:2px; background-image:linear-gradient(var(--primary-glow) 1px,transparent 1px),linear-gradient(90deg,var(--primary-glow) 1px,transparent 1px); background-size:20px 20px; animation:gridpulse 1.6s ease-in-out infinite; }
+  @keyframes gridpulse { 0%,100%{opacity:0.2} 50%{opacity:0.6} }
+  .scan-status-bar { margin-top:0.6rem; display:flex; align-items:center; gap:0.6rem; }
+  .scan-status-text { font-family:'JetBrains Mono',monospace; font-size:0.58rem; letter-spacing:0.08em; }
+  .scan-status-text.analyzing { color:var(--secondary); animation:blink 1s ease-in-out infinite; }
+  .scan-status-text.done { color:#00e090; }
+  .scan-status-text.error { color:#ff4060; }
+  @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.4} }
+  .scan-matches { display:flex; flex-wrap:wrap; gap:0.3rem; margin-top:0.5rem; }
+  .scan-match-pill { padding:0.18rem 0.5rem; border:1px solid #00e090; border-radius:2px; font-family:'JetBrains Mono',monospace; font-size:0.5rem; color:#00e090; background:rgba(0,224,144,0.08); white-space:nowrap; }
+  .scan-match-pill.null-match { border-color:var(--border-hi); color:var(--dim); background:transparent; }
+  .scan-btn { margin-top:0.6rem; width:100%; padding:0.6rem; background:transparent; border:1px solid var(--primary); color:var(--primary); font-family:'Cinzel',serif; font-size:0.68rem; font-weight:700; letter-spacing:0.2em; text-transform:uppercase; cursor:pointer; border-radius:2px; transition:all 0.15s; display:flex; align-items:center; justify-content:center; gap:0.5rem; }
+  .scan-btn:hover:not(:disabled) { background:var(--primary-glow); box-shadow:0 0 16px var(--primary-glow); }
+  .scan-btn:disabled { opacity:0.4; cursor:not-allowed; }
+  .scan-dot { width:6px; height:6px; border-radius:50%; background:var(--primary); animation:pulse 1s ease-in-out infinite; }
+  @keyframes pulse { 0%,100%{transform:scale(1);opacity:1} 50%{transform:scale(1.5);opacity:0.4} }
+
+  .reset-bar { display:flex; justify-content:flex-end; padding:0.3rem 1.25rem 0; }
+  .reset-btn { background:none; border:none; font-family:'JetBrains Mono',monospace; font-size:0.52rem; color:var(--dim); cursor:pointer; letter-spacing:0.1em; padding:0.2rem 0; transition:color 0.15s; text-transform:uppercase; }
+  .reset-btn:hover { color:var(--secondary-dim); }
+  .sections { padding:1rem 1.25rem 240px; display:flex; flex-direction:column; gap:1.5rem; }
+  .sec { border-left:1px solid var(--border); padding-left:0.9rem; position:relative; }
+  .sec::before { content:''; position:absolute; top:0; left:-1px; width:1px; height:24px; background:var(--section-accent); box-shadow:0 0 6px var(--secondary-glow); }
+  .sec-head { display:flex; align-items:center; gap:0.5rem; margin-bottom:0.8rem; }
+  .sec-num { font-family:'JetBrains Mono',monospace; font-size:0.54rem; color:var(--secondary); opacity:0.85; min-width:1.4rem; }
+  .sec-title { font-family:'Cinzel',serif; font-size:0.6rem; letter-spacing:0.2em; text-transform:uppercase; color:var(--primary); text-shadow:0 0 10px var(--primary-glow); }
+  .sec-line { flex:1; height:1px; background:linear-gradient(to right,var(--border-hi),transparent); }
+  .field { margin-bottom:0.85rem; } .field:last-child { margin-bottom:0; }
+  .field-label { font-family:'JetBrains Mono',monospace; font-size:0.58rem; letter-spacing:0.1em; color:var(--muted); margin-bottom:0.38rem; text-transform:uppercase; }
+  .field-note { font-size:0.58rem; color:var(--dim); font-family:'Rajdhani',sans-serif; }
+
+  select { width:100%; background:var(--bg-input); border:1px solid var(--border-hi); color:var(--text); padding:0.55rem 2rem 0.55rem 0.75rem; font-family:'Rajdhani',sans-serif; font-size:0.85rem; font-weight:500; border-radius:2px; appearance:none; cursor:pointer; background-repeat:no-repeat; background-position:right 0.75rem center; transition:border-color 0.15s,box-shadow 0.15s; }
+  select:focus { outline:none; border-color:var(--primary); box-shadow:0 0 0 1px var(--primary-glow); }
+  select option { background:var(--bg-input); color:var(--text); }
+  select.auto-filled { border-color:var(--secondary); box-shadow:0 0 6px var(--secondary-glow); }
+
+  .pills { display:flex; flex-wrap:wrap; gap:0.35rem; }
+  .pill { padding:0.3rem 0.65rem; border:1px solid var(--border-hi); background:transparent; color:var(--muted); font-family:'Rajdhani',sans-serif; font-size:0.82rem; font-weight:500; letter-spacing:0.02em; border-radius:2px; cursor:pointer; transition:all 0.12s; white-space:nowrap; text-align:left; line-height:1.3; }
+  .pill:hover { border-color:var(--primary); color:var(--primary); background:var(--primary-glow); }
+  .pill.on { border-color:var(--primary); background:var(--primary-glow); color:var(--primary); box-shadow:0 0 8px var(--primary-glow); text-shadow:0 0 8px var(--primary-glow); }
+  .pill.auto-filled { box-shadow:0 0 8px var(--secondary-glow) !important; border-color:var(--secondary) !important; color:var(--secondary) !important; background:var(--secondary-glow) !important; }
+  .tab { padding:0.28rem 0.68rem; border:1px solid var(--border-hi); background:transparent; color:var(--dim); font-family:'JetBrains Mono',monospace; font-size:0.52rem; letter-spacing:0.14em; text-transform:uppercase; border-radius:2px; cursor:pointer; transition:all 0.12s; }
+  .tab:hover { border-color:var(--secondary-dim); color:var(--secondary); }
+  .tab.on { background:var(--secondary-glow); border-color:var(--secondary); color:var(--secondary); box-shadow:0 0 8px var(--secondary-glow); }
+
+  .slider-wrap { display:flex; flex-direction:column; gap:0.4rem; }
+  .slider-row { display:flex; justify-content:space-between; align-items:center; }
+  .slider-val { font-family:'JetBrains Mono',monospace; font-size:0.85rem; color:var(--primary); text-shadow:0 0 8px var(--primary-glow); }
+  .slider-zones { display:flex; justify-content:space-between; font-family:'JetBrains Mono',monospace; font-size:0.48rem; color:var(--dim); letter-spacing:0.06em; }
+  input[type=range] { width:100%; -webkit-appearance:none; height:2px; border-radius:1px; outline:none; cursor:pointer; }
+  input[type=range]::-webkit-slider-thumb { -webkit-appearance:none; width:14px; height:14px; background:var(--primary); border-radius:50%; border:2px solid var(--bg); cursor:pointer; box-shadow:0 0 6px var(--primary-glow); }
+
+  .toggle-row { display:flex; align-items:center; gap:0.75rem; cursor:pointer; }
+  .tog { width:36px; height:20px; background:var(--bg-input); border:1px solid var(--border-hi); border-radius:10px; position:relative; transition:all 0.18s; flex-shrink:0; }
+  .tog.on { background:var(--primary-glow); border-color:var(--primary); box-shadow:0 0 8px var(--primary-glow); }
+  .tog-knob { position:absolute; top:3px; left:3px; width:12px; height:12px; background:var(--dim); border-radius:50%; transition:all 0.18s; }
+  .tog.on .tog-knob { left:19px; background:var(--primary); box-shadow:0 0 5px var(--primary-glow); }
+  .tog-label { font-size:0.82rem; color:var(--muted); font-weight:500; }
+  .tog-note { font-size:0.68rem; color:var(--dim); }
+
+  .div { height:1px; background:linear-gradient(to right,var(--border-hi),var(--border),transparent); }
+  .grid2 { display:grid; grid-template-columns:1fr 1fr; gap:0.75rem; }
+
+  .pbar { position:fixed; bottom:0; left:0; right:0; background:var(--pbar-bg); border-top:1px solid var(--border-hi); padding:0.8rem 1.25rem 0.9rem; z-index:999; }
+  .pbar::before { content:''; position:absolute; top:-1px; left:0; right:0; height:1px; background:var(--header-line); }
+  .pbar-label { font-family:'JetBrains Mono',monospace; font-size:0.48rem; letter-spacing:0.22em; text-transform:uppercase; color:var(--secondary-dim); margin-bottom:0.38rem; }
+  .pout { background:var(--bg-input); border:1px solid var(--border-hi); border-radius:2px; padding:0.65rem 0.8rem; font-family:'JetBrains Mono',monospace; font-size:0.62rem; line-height:1.6; color:var(--prompt-text); min-height:52px; max-height:72px; overflow-y:auto; margin-bottom:0.6rem; word-break:break-word; }
+  .pout-empty { color:var(--dim); font-style:italic; }
+  .pout-params { color:var(--secondary); }
+  .copy-btn { width:100%; padding:0.7rem; background:var(--primary); border:none; color:var(--bg); font-family:'Cinzel',serif; font-size:0.72rem; font-weight:700; letter-spacing:0.22em; text-transform:uppercase; cursor:pointer; border-radius:2px; transition:all 0.15s; box-shadow:0 0 18px var(--primary-glow); }
+  .copy-btn:hover:not(:disabled) { filter:brightness(1.12); box-shadow:0 0 28px var(--primary-glow); }
+  .copy-btn:disabled { background:var(--bg-input); border:1px solid var(--border); color:var(--dim); cursor:not-allowed; box-shadow:none; }
+  .copy-btn.ok { background:#00e090; color:#040c06; box-shadow:0 0 22px rgba(0,224,144,0.35); }
+
+  ::-webkit-scrollbar { width:3px; }
+  ::-webkit-scrollbar-track { background:transparent; }
+  ::-webkit-scrollbar-thumb { background:var(--border-hi); border-radius:2px; }
+`;
+
+// ─────────────────────────────────────────────
+// HELPERS
+// ─────────────────────────────────────────────
+
+function SectionHead({ n, title }) {
+  return (
+    <div className="sec-head">
+      <span className="sec-num">{String(n).padStart(2,"0")}</span>
+      <span className="sec-title">{title}</span>
+      <div className="sec-line" />
+    </div>
+  );
+}
+function FieldLabel({ label, note }) {
+  return <div className="field-label">{label}{note&&<span className="field-note"> {note}</span>}</div>;
+}
+
+// Pills — items are {label,value}; state stores value strings
+function Pills({ items, value, onToggle, multi=false, autoFilled=[] }) {
+  return (
+    <div className="pills">
+      {items.map((item) => {
+        const active = multi ? (value||[]).includes(item.value) : value===item.value;
+        const auto   = autoFilled.includes(item.value);
+        return (
+          <button key={item.value}
+            className={`pill ${active?"on":""} ${auto?"auto-filled":""}`}
+            onClick={()=>onToggle(item.value)}>
+            {item.label}
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
+function Tabs({ items, value, onChange }) {
+  return (
+    <div className="pills" style={{marginBottom:"0.5rem"}}>
+      {items.map(t=>(
+        <button key={t} className={`tab ${value===t?"on":""}`} onClick={()=>onChange(t)}>{t}</button>
+      ))}
+    </div>
+  );
+}
+
+function Slider({ label, param, min, max, value, onChange, zones }) {
+  const pct = ((value-min)/(max-min))*100;
+  return (
+    <div className="slider-wrap">
+      <div className="slider-row">
+        <FieldLabel label={label} note={<span style={{fontSize:"0.56rem",color:"var(--dim)"}}>{param}</span>} />
+        <span className="slider-val">{value}</span>
+      </div>
+      <input type="range" min={min} max={max} value={value}
+        style={{background:`linear-gradient(to right,var(--primary) 0%,var(--primary) ${pct}%,var(--border-hi) ${pct}%,var(--border-hi) 100%)`}}
+        onChange={e=>onChange(parseInt(e.target.value))} />
+      {zones&&<div className="slider-zones">{zones.map((z,i)=><span key={i}>{z}</span>)}</div>}
+    </div>
+  );
+}
+
+function Toggle({ on, onToggle, label, note }) {
+  return (
+    <div className="toggle-row" onClick={onToggle}>
+      <div className={`tog ${on?"on":""}`}><div className="tog-knob"/></div>
+      <div><span className="tog-label">{label}</span>{note&&<span className="tog-note"> — {note}</span>}</div>
+    </div>
+  );
+}
+
+function ThemePicker({ themeKey, onChange }) {
+  return (
+    <div className="theme-bar">
+      <div className="theme-bar-label">Scene Vibe</div>
+      <div className="theme-pills">
+        {Object.entries(THEMES).map(([key,th])=>(
+          <button key={key} className={`theme-pill ${themeKey===key?"on":""}`}
+            onClick={()=>onChange(key)} title={th.sub}>
+            <div className="theme-swatch" style={{background:`linear-gradient(135deg,${th.dot1} 50%,${th.dot2} 50%)`}}/>
+            <span className="theme-pill-name">{th.name}</span>
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// ─────────────────────────────────────────────
+// SCAN PANEL
+// ─────────────────────────────────────────────
+
+function ScanPanel({ onApply }) {
+  const [preview,   setPreview]   = useState(null);
+  const [imgData,   setImgData]   = useState(null);
+  const [scanState, setScanState] = useState("idle");
+  const [matches,   setMatches]   = useState([]);
+  const [errMsg,    setErrMsg]    = useState("");
+  const [dragOver,  setDragOver]  = useState(false);
+  const inputRef = useRef(null);
+
+  const loadFile = (file) => {
+    if (!file||!file.type.startsWith("image/")) return;
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      setPreview(ev.target.result);
+      setImgData({ base64: ev.target.result.split(",")[1], mediaType: file.type });
+      setScanState("loaded"); setMatches([]);
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleScan = async () => {
+    if (!imgData) return;
+    setScanState("scanning"); setErrMsg("");
+    try {
+      const apiKey = window.__MJ_API_KEY__;
+      if (!apiKey) throw new Error("Missing VITE_ANTHROPIC_API_KEY — see README");
+      const res = await fetch("https://api.anthropic.com/v1/messages", {
+        method:"POST", headers:{"Content-Type":"application/json","x-api-key":apiKey,"anthropic-version":"2023-06-01","anthropic-dangerous-direct-browser-access":"true"},
+        body: JSON.stringify({
+          model:"claude-sonnet-4-20250514", max_tokens:1000,
+          system: buildSystemPrompt(),
+          messages:[{ role:"user", content:[
+            { type:"image", source:{ type:"base64", media_type:imgData.mediaType, data:imgData.base64 }},
+            { type:"text",  text:"Analyze this environment and return the JSON mapping." }
+          ]}]
+        })
+      });
+      const data = await res.json();
+      if (data.error) throw new Error(data.error.message||"API error");
+      const raw = data.content.map(c=>c.text||"").join("");
+      const parsed = JSON.parse(raw.replace(/```json|```/g,"").trim());
+      const applied = onApply(parsed);
+      setMatches(applied); setScanState("done");
+    } catch(e) {
+      setScanState("error"); setErrMsg(e.message||"Scan failed — retry");
+    }
+  };
+
+  const handleClear = () => {
+    setPreview(null); setImgData(null); setScanState("idle"); setMatches([]); setErrMsg("");
+  };
+
+  return (
+    <div className="scan-panel">
+      <div className="scan-panel-head">
+        <div>
+          <div className="scan-panel-label">◈ Reverse Engineer from Image</div>
+          <div className="scan-panel-sub">Drop a scene image — AI reads it and fills the form</div>
+        </div>
+        {preview&&<button className="scan-clear-btn" onClick={handleClear}>✕ clear</button>}
+      </div>
+
+      {!preview ? (
+        <div className={`drop-zone ${dragOver?"drag-over":""}`}
+          onClick={()=>inputRef.current?.click()}
+          onDrop={e=>{e.preventDefault();setDragOver(false);loadFile(e.dataTransfer.files[0]);}}
+          onDragOver={e=>{e.preventDefault();setDragOver(true);}}
+          onDragLeave={()=>setDragOver(false)}>
+          <div className="drop-zone-inner">
+            <div className="drop-icon">⊕</div>
+            <div className="drop-text">Drop image here</div>
+            <div className="drop-subtext">or tap to browse · jpg / png / webp</div>
+          </div>
+          <input ref={inputRef} type="file" accept="image/*" style={{display:"none"}}
+            onChange={e=>loadFile(e.target.files[0])} />
+        </div>
+      ) : (
+        <div className="scan-img-wrap">
+          <img src={preview} className="scan-img" alt="scene to analyze" />
+          {scanState==="scanning"&&<><div className="scan-overlay"/><div className="scan-grid-overlay"/></>}
+        </div>
+      )}
+
+      {preview&&scanState!=="done"&&(
+        <button className="scan-btn" onClick={handleScan} disabled={scanState==="scanning"}>
+          {scanState==="scanning"
+            ? <><div className="scan-dot"/><span>Analyzing scene...</span></>
+            : <span>◈ Scan Scene</span>}
+        </button>
+      )}
+
+      {scanState==="done"&&matches.length>0&&(
+        <div>
+          <div className="scan-status-bar">
+            <span className="scan-status-text done">
+              ✓ {matches.filter(m=>m.matched).length} of {matches.length} fields matched
+            </span>
+            <button className="scan-clear-btn" onClick={handleClear}>scan another</button>
+          </div>
+          <div className="scan-matches">
+            {matches.map((m,i)=>(
+              <div key={i} className={`scan-match-pill ${m.matched?"":"null-match"}`}>
+                {m.field}{m.matched?" ✓":" —"}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+      {scanState==="error"&&(
+        <div className="scan-status-bar">
+          <span className="scan-status-text error">✗ {errMsg}</span>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ─────────────────────────────────────────────
+// MAIN
+// ─────────────────────────────────────────────
+
+function App() {
+  const [themeKey,   setThemeKey]   = useState("cyber-noir");
+  const [locationCat,setLocationCat]= useState("Real World");
+  const [location,   setLocation]   = useState("");
+  const [time,       setTime]       = useState("");
+  const [weather,    setWeather]    = useState("");
+  const [archStyle,  setArchStyle]  = useState("");
+  const [materials,  setMaterials]  = useState([]);
+  const [foreground, setForeground] = useState("");
+  const [midground,  setMidground]  = useState("");
+  const [background, setBackground] = useState("");
+  const [lightCat,   setLightCat]   = useState("Dramatic");
+  const [lighting,   setLighting]   = useState("");
+  const [particles,  setParticles]  = useState([]);
+  const [mood,       setMood]       = useState("");
+  const [framing,    setFraming]    = useState("");
+  const [focalLen,   setFocalLen]   = useState("");
+  const [styleCat,   setStyleCat]   = useState("Style Anchors");
+  const [styleRef,   setStyleRef]   = useState("");
+  const [ratio,      setRatio]      = useState("16:9");
+  const [stylize,    setStylize]    = useState(250);
+  const [chaos,      setChaos]      = useState(10);
+  const [useRaw,     setUseRaw]     = useState(false);
+  const [negatives,  setNegatives]  = useState(["people, text, watermark, oversaturated"]);
+  const [copied,     setCopied]     = useState(false);
+  const [autoFields, setAutoFields] = useState({});
+
+  const t = THEMES[themeKey];
+  const single = (setter, cur) => (val) => setter(cur===val?"":val);
+
+  const handleApply = useCallback((parsed) => {
+    const results = []; const newAuto = {};
+    const trySet = (field, list, setter, val) => {
+      const found = matchVal(list, val);
+      if (found) { setter(found); newAuto[field]=found; results.push({field,matched:true}); }
+      else results.push({field,matched:false});
+    };
+    const tryMulti = (field, list, setter, vals) => {
+      const found = (vals||[]).map(v=>matchVal(list,v)).filter(Boolean).slice(0,4);
+      if (found.length) { setter(found); found.forEach(f=>{newAuto[field+":"+f]=f;}); results.push({field,matched:true}); }
+      else results.push({field,matched:false});
+    };
+    const allLocs = Object.values(LOCATION_CATS).flat();
+    if (parsed.location) {
+      const found = allLocs.find(x=>x.value===parsed.location);
+      if (found) {
+        setLocation(found.value);
+        const cat = Object.entries(LOCATION_CATS).find(([,v])=>v.includes(found))?.[0];
+        if (cat) setLocationCat(cat);
+        newAuto["location"]=found.value; results.push({field:"location",matched:true});
+      } else results.push({field:"location",matched:false});
+    } else results.push({field:"location",matched:false});
+    trySet("time",      TIMES,       setTime,      parsed.time);
+    trySet("weather",   WEATHER,     setWeather,   parsed.weather);
+    trySet("archStyle", ARCH_STYLES, setArchStyle, parsed.archStyle);
+    tryMulti("materials", MATERIALS, setMaterials, parsed.materials);
+    trySet("foreground", FOREGROUNDS, setForeground, parsed.foreground);
+    trySet("midground",  MIDGROUNDS,  setMidground,  parsed.midground);
+    trySet("background", BACKGROUNDS, setBackground, parsed.background);
+    tryMulti("particles", PARTICLES, setParticles, parsed.particles);
+    trySet("mood",    MOODS,    setMood,    parsed.mood);
+    trySet("framing", FRAMINGS, setFraming, parsed.framing);
+    trySet("focalLen", FOCAL_LENGTHS, setFocalLen, parsed.focalLen);
+    trySet("ratio", RATIOS, setRatio, parsed.ratio);
+    if (parsed.lighting) {
+      let found = false;
+      for (const [cat,opts] of Object.entries(LIGHTING)) {
+        const m = matchVal(opts, parsed.lighting);
+        if (m) { setLightCat(cat); setLighting(m); newAuto["lighting"]=m; found=true; break; }
+      }
+      results.push({field:"lighting",matched:found});
+    } else results.push({field:"lighting",matched:false});
+    if (parsed.styleRef) {
+      let found = false;
+      for (const [cat,opts] of Object.entries(STYLES)) {
+        const m = matchVal(opts, parsed.styleRef);
+        if (m) { setStyleCat(cat); setStyleRef(m); newAuto["styleRef"]=m; found=true; break; }
+      }
+      results.push({field:"style",matched:found});
+    } else results.push({field:"style",matched:false});
+    if (typeof parsed.stylize==="number") setStylize(Math.min(900,Math.max(50,Math.round(parsed.stylize))));
+    if (typeof parsed.chaos==="number") setChaos(Math.min(100,Math.max(0,Math.round(parsed.chaos))));
+    setAutoFields(newAuto);
+    return results;
+  }, []);
+
+  const prompt = useMemo(() => {
+    const p = [];
+    if (location)        p.push(location);
+    if (archStyle)       p.push(archStyle);
+    if (time||weather)   p.push([time,weather].filter(Boolean).join(", "));
+    if (materials.length) p.push(materials.join(", "));
+    if (foreground)      p.push(`foreground of ${foreground}`);
+    if (midground)       p.push(`midground of ${midground}`);
+    if (background)      p.push(`background fading into ${background}`);
+    if (lighting)        p.push(lighting);
+    if (particles.length) p.push(`${particles.join(" and ")} in the atmosphere`);
+    if (mood&&MOOD_PHRASES[mood]) p.push(MOOD_PHRASES[mood]);
+    if (framing)         p.push(framing);
+    if (focalLen)        p.push(focalLen);
+    if (styleRef)        p.push(`in the style of ${styleRef}`);
+    if (!p.length)       return "";
+    const params = ["--v 7",`--ar ${ratio}`,`--s ${stylize}`,
+      chaos>0?`--c ${chaos}`:null, useRaw?"--raw":null,
+      negatives.length?`--no ${negatives.join(", ")}`:null
+    ].filter(Boolean).join(" ");
+    return `${p.join(", ")} ${params}`;
+  },[location,time,weather,archStyle,materials,foreground,midground,background,
+     lighting,particles,mood,framing,focalLen,styleRef,ratio,stylize,chaos,useRaw,negatives]);
+
+  const handleCopy = async () => {
+    if (!prompt) return;
+    try { await navigator.clipboard.writeText(prompt); } catch {}
+    setCopied(true); setTimeout(()=>setCopied(false),2200);
+  };
+  const handleReset = () => {
+    setLocation(""); setLocationCat("Real World"); setTime(""); setWeather(""); setArchStyle("");
+    setMaterials([]); setForeground(""); setMidground(""); setBackground("");
+    setLighting(""); setParticles([]); setMood(""); setFraming(""); setFocalLen("");
+    setStyleRef(""); setRatio("16:9"); setStylize(250); setChaos(10);
+    setUseRaw(false); setNegatives(["people, text, watermark, oversaturated"]); setAutoFields({});
+  };
+
+  const isAuto = (key) => !!autoFields[key];
+
+  const themeVars = {
+    "--bg":t.bg,"--bg-input":t.bgInput,"--border":t.border,"--border-hi":t.borderHi,
+    "--pbar-bg":t.pbarBg,"--primary":t.primary,"--primary-glow":t.primaryGlow,
+    "--secondary":t.secondary,"--secondary-dim":t.secondaryDim,"--secondary-glow":t.secondaryGlow,
+    "--text":t.text,"--muted":t.muted,"--dim":t.dim,"--prompt-text":t.promptText,
+    "--grid-color":t.gridColor,"--header-line":t.headerLine,"--section-accent":t.sectionAccent,
+  };
+  const arrowCSS = `select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='8' height='5' viewBox='0 0 8 5'%3E%3Cpath d='M0 0l4 5 4-5z' fill='${t.arrowHex}' opacity='0.9'/%3E%3C/svg%3E");}`;
+  const promptScene  = prompt ? prompt.replace(/\s--.*$/s,"") : "";
+  const promptParams = prompt ? (prompt.match(/\s(--.*)$/s)?.[1]||"") : "";
+
+  return (
+    <>
+      <style>{BASE_CSS}</style>
+      <style>{arrowCSS}</style>
+      <div className="root" style={themeVars}>
+        <div className="hdr">
+          <div className="hdr-eyebrow">MidJourney V7</div>
+          <div className="hdr-title">Environment Prompt Builder</div>
+          <div className="hdr-desc">Build the physical world first. Then light it.</div>
+        </div>
+
+        <ThemePicker themeKey={themeKey} onChange={setThemeKey} />
+        <ScanPanel onApply={handleApply} />
+
+        <div className="reset-bar">
+          <button className="reset-btn" onClick={handleReset}>↺ Reset all</button>
+        </div>
+
+        <div className="sections">
+
+          {/* 01 */}
+          <div className="sec">
+            <SectionHead n={1} title="Scene Foundation" />
+            <div className="field">
+              <FieldLabel label="Location Type" />
+              <Tabs items={Object.keys(LOCATION_CATS)} value={locationCat}
+                onChange={cat=>{setLocationCat(cat); setLocation("");}} />
+              <select value={location} className={isAuto("location")?"auto-filled":""}
+                onChange={e=>setLocation(e.target.value)}>
+                <option value="">— Select location —</option>
+                {LOCATION_CATS[locationCat].map(l=><option key={l.value} value={l.value}>{l.label}</option>)}
+              </select>
+            </div>
+            <div className="field">
+              <FieldLabel label="Time of Day" />
+              <Pills items={TIMES} value={time} onToggle={single(setTime,time)}
+                autoFilled={isAuto("time")?[time]:[]} />
+            </div>
+            <div className="field">
+              <FieldLabel label="Weather / Conditions" />
+              <Pills items={WEATHER} value={weather} onToggle={single(setWeather,weather)}
+                autoFilled={isAuto("weather")?[weather]:[]} />
+            </div>
+          </div>
+
+          <div className="div" />
+
+          {/* 02 */}
+          <div className="sec">
+            <SectionHead n={2} title="Architecture & Materials" />
+            <div className="field">
+              <FieldLabel label="Architectural Style" />
+              <select value={archStyle} className={isAuto("archStyle")?"auto-filled":""}
+                onChange={e=>setArchStyle(e.target.value)}>
+                <option value="">— Select style —</option>
+                {ARCH_STYLES.map(s=><option key={s.value} value={s.value}>{s.label}</option>)}
+              </select>
+            </div>
+            <div className="field">
+              <FieldLabel label="Primary Materials" note="(up to 4)" />
+              <Pills items={MATERIALS} value={materials} multi
+                autoFilled={materials.filter(m=>isAuto("materials:"+m))}
+                onToggle={v=>{
+                  if(materials.includes(v)) setMaterials(materials.filter(x=>x!==v));
+                  else if(materials.length<4) setMaterials([...materials,v]);
+                }} />
+            </div>
+          </div>
+
+          <div className="div" />
+
+          {/* 03 */}
+          <div className="sec">
+            <SectionHead n={3} title="Spatial Layers" />
+            <div className="field">
+              <FieldLabel label="Foreground" note="anchor the eye" />
+              <select value={foreground} className={isAuto("foreground")?"auto-filled":""}
+                onChange={e=>setForeground(e.target.value)}>
+                <option value="">— Select foreground element —</option>
+                {FOREGROUNDS.map(f=><option key={f.value} value={f.value}>{f.label}</option>)}
+              </select>
+            </div>
+            <div className="field">
+              <FieldLabel label="Midground" />
+              <select value={midground} className={isAuto("midground")?"auto-filled":""}
+                onChange={e=>setMidground(e.target.value)}>
+                <option value="">— Select midground —</option>
+                {MIDGROUNDS.map(m=><option key={m.value} value={m.value}>{m.label}</option>)}
+              </select>
+            </div>
+            <div className="field">
+              <FieldLabel label="Background" note="fades into atmosphere" />
+              <select value={background} className={isAuto("background")?"auto-filled":""}
+                onChange={e=>setBackground(e.target.value)}>
+                <option value="">— Select background —</option>
+                {BACKGROUNDS.map(b=><option key={b.value} value={b.value}>{b.label}</option>)}
+              </select>
+            </div>
+          </div>
+
+          <div className="div" />
+
+          {/* 04 */}
+          <div className="sec">
+            <SectionHead n={4} title="Lighting" />
+            <Tabs items={Object.keys(LIGHTING)} value={lightCat}
+              onChange={cat=>{setLightCat(cat);setLighting("");}} />
+            <Pills items={LIGHTING[lightCat]} value={lighting}
+              onToggle={single(setLighting,lighting)}
+              autoFilled={isAuto("lighting")?[lighting]:[]} />
+          </div>
+
+          <div className="div" />
+
+          {/* 05 */}
+          <div className="sec">
+            <SectionHead n={5} title="Atmosphere" />
+            <div className="field">
+              <FieldLabel label="Air / Particles" note="(up to 4) — adds spatial depth" />
+              <Pills items={PARTICLES} value={particles} multi
+                autoFilled={particles.filter(p=>isAuto("particles:"+p))}
+                onToggle={v=>{
+                  if(particles.includes(v)) setParticles(particles.filter(x=>x!==v));
+                  else if(particles.length<4) setParticles([...particles,v]);
+                }} />
+            </div>
+            <div className="field">
+              <FieldLabel label="Mood Register" />
+              <Pills items={MOODS} value={mood} onToggle={single(setMood,mood)}
+                autoFilled={isAuto("mood")?[mood]:[]} />
+            </div>
+          </div>
+
+          <div className="div" />
+
+          {/* 06 */}
+          <div className="sec">
+            <SectionHead n={6} title="Camera" />
+            <div className="field">
+              <FieldLabel label="Framing" />
+              <Pills items={FRAMINGS} value={framing} onToggle={single(setFraming,framing)}
+                autoFilled={isAuto("framing")?[framing]:[]} />
+            </div>
+            <div className="field">
+              <FieldLabel label="Focal Length" />
+              <select value={focalLen} className={isAuto("focalLen")?"auto-filled":""}
+                onChange={e=>setFocalLen(e.target.value)}>
+                <option value="">— Select focal length —</option>
+                {FOCAL_LENGTHS.map(f=><option key={f.value} value={f.value}>{f.label}</option>)}
+              </select>
+            </div>
+          </div>
+
+          <div className="div" />
+
+          {/* 07 */}
+          <div className="sec">
+            <SectionHead n={7} title="Style Reference" />
+            <Tabs items={Object.keys(STYLES)} value={styleCat}
+              onChange={cat=>{setStyleCat(cat);setStyleRef("");}} />
+            <Pills items={STYLES[styleCat]} value={styleRef}
+              onToggle={single(setStyleRef,styleRef)}
+              autoFilled={isAuto("styleRef")?[styleRef]:[]} />
+          </div>
+
+          <div className="div" />
+
+          {/* 08 */}
+          <div className="sec">
+            <SectionHead n={8} title="Parameters" />
+            <div className="field">
+              <FieldLabel label="Aspect Ratio" />
+              <Pills items={RATIOS} value={ratio}
+                onToggle={v=>setRatio(v)}
+                autoFilled={isAuto("ratio")?[ratio]:[]} />
+            </div>
+            <div className="field">
+              <Slider label="Stylize" param="--s" min={50} max={900} value={stylize}
+                onChange={setStylize} zones={["Literal","Cinematic","Painterly","MJ-dominant"]} />
+            </div>
+            <div className="field">
+              <Slider label="Chaos" param="--c" min={0} max={100} value={chaos}
+                onChange={setChaos} zones={["Predictable","Organic","Unpredictable"]} />
+            </div>
+            <div className="field">
+              <Toggle on={useRaw} onToggle={()=>setUseRaw(!useRaw)}
+                label="--raw" note="reduces MJ processing, more photographic" />
+            </div>
+            <div className="field">
+              <FieldLabel label="Negative Prompts" />
+              <Pills items={NEG_PRESETS} value={negatives} multi
+                onToggle={v=>setNegatives(negatives.includes(v)?negatives.filter(x=>x!==v):[...negatives,v])} />
+            </div>
+          </div>
+
+        </div>
+
+        {/* PROMPT BAR */}
+        <div className="pbar">
+          <div className="pbar-label">Generated Prompt</div>
+          <div className="pout">
+            {prompt
+              ? <><span>{promptScene}</span><span className="pout-params">{promptParams?" "+promptParams:""}</span></>
+              : <span className="pout-empty">Select options above — your prompt assembles here</span>}
+          </div>
+          <button className={`copy-btn ${copied?"ok":""}`} onClick={handleCopy} disabled={!prompt}>
+            {copied?"✓  Copied to Clipboard":"Copy Prompt →"}
+          </button>
+        </div>
+      </div>
+    </>
+  );
+}
+
+    const root = ReactDOM.createRoot(document.getElementById("app-root"));
+    root.render(<App />);
+  </script>
+
+</body>
+</html>
