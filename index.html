@@ -1,469 +1,446 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>SceneForge Slim — Midjourney Prompt Builder</title>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>SceneForge Balanced — Midjourney Prompt Builder</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.3.1/umd/react.production.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.3.1/umd/react-dom.production.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.5/babel.min.js"></script>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700&family=JetBrains+Mono:wght@400;500&family=Rajdhani:wght@400;500;600&display=swap');
-
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { background: #060810; color: #f0ece0; font-family: Rajdhani, sans-serif; }
-    .app {
-      min-height: 100vh;
-      background:
-        linear-gradient(rgba(0,229,255,.018) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(0,229,255,.018) 1px, transparent 1px),
-        #060810;
-      background-size: 44px 44px;
-      padding-bottom: 230px;
-    }
-    .hdr {
-      padding: 1rem 1.25rem .8rem;
-      border-bottom: 1px solid #242840;
-      position: sticky;
-      top: 0;
-      z-index: 10;
-      background: rgba(6,8,16,.96);
-      backdrop-filter: blur(10px);
-    }
-    .hdr:before {
-      content: '';
-      position: absolute;
-      top: 0; left: 0; right: 0;
-      height: 2px;
-      background: linear-gradient(90deg, transparent, #00e5ff, #ffe040, transparent);
-    }
-    .logo {
-      font-family: Cinzel, serif;
-      color: #ffe040;
-      font-size: 1.15rem;
-      letter-spacing: .12em;
-      text-shadow: 0 0 18px rgba(255,224,64,.22);
-    }
-    .sub {
-      font-family: JetBrains Mono, monospace;
-      color: #00b8cc;
-      font-size: .48rem;
-      letter-spacing: .2em;
-      text-transform: uppercase;
-      margin-top: .2rem;
-    }
-    .sections { padding: 1rem 1.25rem; display: flex; flex-direction: column; gap: 1.1rem; max-width: 1120px; margin: 0 auto; }
-    .sec {
-      border-left: 1px solid #242840;
-      padding-left: .9rem;
-      position: relative;
-    }
-    .sec:before {
-      content: '';
-      position: absolute;
-      top: 0; left: -1px;
-      width: 1px; height: 24px;
-      background: #00e5ff;
-      box-shadow: 0 0 8px rgba(0,229,255,.35);
-    }
-    .sec-head { display: flex; align-items: center; gap: .55rem; margin-bottom: .7rem; }
-    .num { font-family: JetBrains Mono, monospace; color: #00e5ff; font-size: .52rem; min-width: 1.45rem; }
-    .title { font-family: Cinzel, serif; color: #ffe040; font-size: .62rem; letter-spacing: .18em; text-transform: uppercase; }
-    .line { flex: 1; height: 1px; background: linear-gradient(to right, #363c5a, transparent); }
-    .hint { font-family: JetBrains Mono, monospace; font-size: .55rem; line-height: 1.55; color: #5a5878; margin: -.25rem 0 .55rem; }
-    .label { font-family: JetBrains Mono, monospace; font-size: .5rem; letter-spacing: .12em; text-transform: uppercase; color: #a8a4c0; margin: .6rem 0 .3rem; }
-    .pills { display: flex; flex-wrap: wrap; gap: .32rem; }
-    button.pill {
-      padding: .32rem .65rem;
-      border: 1px solid #363c5a;
-      background: transparent;
-      color: #a8a4c0;
-      font-family: Rajdhani, sans-serif;
-      font-size: .82rem;
-      font-weight: 500;
-      border-radius: 3px;
-      cursor: pointer;
-      line-height: 1.25;
-      text-align: left;
-      transition: all .12s;
-    }
-    button.pill:hover { border-color: #ffe040; color: #ffe040; background: rgba(255,224,64,.08); }
-    button.pill.on { border-color: #ffe040; color: #ffe040; background: rgba(255,224,64,.18); box-shadow: 0 0 8px rgba(255,224,64,.16); }
-    .grid2 { display: grid; grid-template-columns: 1fr; gap: .65rem; }
-    @media(min-width: 850px) { .grid2 { grid-template-columns: 1fr 1fr; } }
-    select, textarea, input[type="text"] {
-      width: 100%;
-      background: #0f1120;
-      border: 1px solid #363c5a;
-      color: #f0ece0;
-      padding: .58rem .75rem;
-      font-family: Rajdhani, sans-serif;
-      font-size: .9rem;
-      border-radius: 3px;
-      outline: none;
-    }
-    textarea { min-height: 72px; resize: vertical; line-height: 1.5; }
-    select:focus, textarea:focus, input:focus { border-color: #ffe040; box-shadow: 0 0 0 1px rgba(255,224,64,.2); }
-    .preview {
-      margin-top: .55rem;
-      padding: .55rem .7rem;
-      background: #0f1120;
-      border: 1px solid #242840;
-      color: #00b8cc;
-      font-family: JetBrains Mono, monospace;
-      font-size: .58rem;
-      line-height: 1.55;
-      border-radius: 3px;
-      word-break: break-word;
-    }
-    .row { display: flex; align-items: center; justify-content: space-between; gap: 1rem; }
-    .slider { margin-top: .7rem; }
-    .slider-val { font-family: JetBrains Mono, monospace; color: #ffe040; font-size: .78rem; }
-    input[type="range"] { width: 100%; appearance: none; height: 2px; background: #363c5a; border-radius: 99px; cursor: pointer; }
-    input[type="range"]::-webkit-slider-thumb { appearance: none; width: 14px; height: 14px; border-radius: 50%; background: #ffe040; border: 2px solid #060810; box-shadow: 0 0 8px rgba(255,224,64,.35); }
-    .toggle-row { display: flex; flex-wrap: wrap; gap: .35rem; margin-top: .75rem; }
-    .bar {
-      position: fixed;
-      left: 0; right: 0; bottom: 0;
-      z-index: 20;
-      background: #080a16;
-      border-top: 1px solid #363c5a;
-      padding: .75rem 1.25rem .9rem;
-    }
-    .bar:before {
-      content: '';
-      position: absolute;
-      top: -1px; left: 0; right: 0;
-      height: 1px;
-      background: linear-gradient(90deg, transparent, #00e5ff, #ffe040, transparent);
-    }
-    .bar-inner { max-width: 1120px; margin: 0 auto; }
-    .bar-lbl { font-family: JetBrains Mono, monospace; font-size: .48rem; letter-spacing: .22em; text-transform: uppercase; color: #00b8cc; margin-bottom: .35rem; }
-    .out {
-      background: #0f1120;
-      border: 1px solid #363c5a;
-      color: #d0c890;
-      padding: .6rem .75rem;
-      border-radius: 3px;
-      font-family: JetBrains Mono, monospace;
-      font-size: .61rem;
-      line-height: 1.55;
-      max-height: 82px;
-      overflow-y: auto;
-      word-break: break-word;
-      margin-bottom: .55rem;
-    }
-    .params { color: #00e5ff; }
-    .copy { width: 100%; padding: .7rem; border: none; border-radius: 3px; cursor: pointer; background: #ffe040; color: #060810; font-family: Cinzel, serif; letter-spacing: .18em; text-transform: uppercase; font-size: .72rem; font-weight: 700; }
-    .copy:disabled { background: #0f1120; color: #5a5878; border: 1px solid #242840; cursor: not-allowed; }
-    .copy.ok { background: #00e090; }
-    .small { color: #5a5878; font-size: .48rem; font-family: JetBrains Mono, monospace; margin-top: .28rem; line-height: 1.35; }
+    *{box-sizing:border-box;margin:0;padding:0}
+    body{background:#060810;color:#f0ece0;font-family:Rajdhani,sans-serif}
+    .app{min-height:100vh;background:linear-gradient(rgba(0,229,255,.018) 1px,transparent 1px),linear-gradient(90deg,rgba(0,229,255,.018) 1px,transparent 1px),#060810;background-size:44px 44px;padding-bottom:250px}
+    .hdr{padding:1rem 1.25rem .8rem;border-bottom:1px solid #242840;position:sticky;top:0;z-index:10;background:rgba(6,8,16,.96);backdrop-filter:blur(10px)}
+    .hdr:before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,#00e5ff,#ffe040,transparent)}
+    .hdr-row{display:flex;justify-content:space-between;gap:1rem;align-items:flex-start;max-width:1200px;margin:0 auto}
+    .logo{font-family:Cinzel,serif;color:#ffe040;font-size:1.15rem;letter-spacing:.12em;text-shadow:0 0 18px rgba(255,224,64,.22)}
+    .sub{font-family:JetBrains Mono,monospace;color:#00b8cc;font-size:.48rem;letter-spacing:.2em;text-transform:uppercase;margin-top:.2rem}
+    .sections{padding:1rem 1.25rem;display:flex;flex-direction:column;gap:1.15rem;max-width:1200px;margin:0 auto}
+    .sec{border-left:1px solid #242840;padding-left:.9rem;position:relative}
+    .sec:before{content:'';position:absolute;top:0;left:-1px;width:1px;height:24px;background:#00e5ff;box-shadow:0 0 8px rgba(0,229,255,.35)}
+    .sec-head{display:flex;align-items:center;gap:.55rem;margin-bottom:.7rem}
+    .num{font-family:JetBrains Mono,monospace;color:#00e5ff;font-size:.52rem;min-width:1.45rem}
+    .title{font-family:Cinzel,serif;color:#ffe040;font-size:.62rem;letter-spacing:.18em;text-transform:uppercase}
+    .line{flex:1;height:1px;background:linear-gradient(to right,#363c5a,transparent)}
+    .hint{font-family:JetBrains Mono,monospace;font-size:.55rem;line-height:1.55;color:#5a5878;margin:-.25rem 0 .55rem}
+    .label{font-family:JetBrains Mono,monospace;font-size:.5rem;letter-spacing:.12em;text-transform:uppercase;color:#a8a4c0;margin:.6rem 0 .3rem}
+    .pills{display:flex;flex-wrap:wrap;gap:.32rem}
+    button.pill{padding:.32rem .65rem;border:1px solid #363c5a;background:transparent;color:#a8a4c0;font-family:Rajdhani,sans-serif;font-size:.82rem;font-weight:500;border-radius:3px;cursor:pointer;line-height:1.25;text-align:left;transition:all .12s}
+    button.pill:hover{border-color:#ffe040;color:#ffe040;background:rgba(255,224,64,.08)}
+    button.pill.on{border-color:#ffe040;color:#ffe040;background:rgba(255,224,64,.18);box-shadow:0 0 8px rgba(255,224,64,.16)}
+    .grid2{display:grid;grid-template-columns:1fr;gap:.7rem}
+    .grid3{display:grid;grid-template-columns:1fr;gap:.7rem}
+    @media(min-width:850px){.grid2{grid-template-columns:1fr 1fr}.grid3{grid-template-columns:1fr 1fr 1fr}}
+    select,textarea,input[type=text]{width:100%;background:#0f1120;border:1px solid #363c5a;color:#f0ece0;padding:.58rem .75rem;font-family:Rajdhani,sans-serif;font-size:.9rem;border-radius:3px;outline:none}
+    textarea{min-height:74px;resize:vertical;line-height:1.5}
+    select:focus,textarea:focus,input:focus{border-color:#ffe040;box-shadow:0 0 0 1px rgba(255,224,64,.2)}
+    .preview{margin-top:.55rem;padding:.55rem .7rem;background:#0f1120;border:1px solid #242840;color:#00b8cc;font-family:JetBrains Mono,monospace;font-size:.58rem;line-height:1.55;border-radius:3px;word-break:break-word}
+    .row{display:flex;align-items:center;justify-content:space-between;gap:1rem}
+    .slider{margin-top:.7rem}
+    .slider-val{font-family:JetBrains Mono,monospace;color:#ffe040;font-size:.78rem}
+    input[type=range]{width:100%;appearance:none;height:2px;background:#363c5a;border-radius:99px;cursor:pointer}
+    input[type=range]::-webkit-slider-thumb{appearance:none;width:14px;height:14px;border-radius:50%;background:#ffe040;border:2px solid #060810;box-shadow:0 0 8px rgba(255,224,64,.35)}
+    .toggle-row{display:flex;flex-wrap:wrap;gap:.35rem;margin-top:.75rem}
+    .bar{position:fixed;left:0;right:0;bottom:0;z-index:20;background:#080a16;border-top:1px solid #363c5a;padding:.75rem 1.25rem .9rem}
+    .bar:before{content:'';position:absolute;top:-1px;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,#00e5ff,#ffe040,transparent)}
+    .bar-inner{max-width:1200px;margin:0 auto}
+    .bar-lbl{font-family:JetBrains Mono,monospace;font-size:.48rem;letter-spacing:.22em;text-transform:uppercase;color:#00b8cc;margin-bottom:.35rem}
+    .out{background:#0f1120;border:1px solid #363c5a;color:#d0c890;padding:.6rem .75rem;border-radius:3px;font-family:JetBrains Mono,monospace;font-size:.61rem;line-height:1.55;max-height:92px;overflow-y:auto;word-break:break-word;margin-bottom:.55rem}
+    .params{color:#00e5ff}
+    .copy{width:100%;padding:.7rem;border:none;border-radius:3px;cursor:pointer;background:#ffe040;color:#060810;font-family:Cinzel,serif;letter-spacing:.18em;text-transform:uppercase;font-size:.72rem;font-weight:700}
+    .copy:disabled{background:#0f1120;color:#5a5878;border:1px solid #242840;cursor:not-allowed}
+    .copy.ok{background:#00e090}
+    .small{color:#5a5878;font-size:.48rem;font-family:JetBrains Mono,monospace;margin-top:.28rem;line-height:1.35}
+    .splitline{height:1px;background:linear-gradient(to right,#242840,transparent);margin:.75rem 0}
   </style>
 </head>
 <body>
-  <div id="root"></div>
-  <script>const { useMemo, useState } = React;</script>
-  <script type="text/babel">
+<div id="root"></div>
+<script>const {useMemo,useState}=React;</script>
+<script type="text/babel">
 
-const RECIPES = [
-  { label: 'Cinematic portrait', v: 'cinematic environmental portrait photography, single clear subject, grounded realism', s: 175, raw: true },
-  { label: 'Noir portrait', v: 'black and white noir street portrait, high contrast shadows, luminous highlights, single clear subject', s: 125, raw: true },
-  { label: 'Glitch editorial', v: 'glitch art editorial portrait, controlled digital corruption, subtle RGB separation around the edges only, single clear subject, sharp face', s: 175, raw: true },
-  { label: 'Graphic horror', v: 'dark graphic horror artwork, bold ink linework, stark shapes, limited palette, dramatic shadow design', s: 450, raw: false },
-  { label: 'Noir manga', v: 'noir manga illustration, expressive ink linework, close-up cinematic composition, clean grayscale shadow design', s: 350, raw: false },
-  { label: '1970s crime still', v: 'raw 1970s crime thriller film still, gritty urban realism, analog grain, period detail, cinematic composition', s: 125, raw: true },
-  { label: '1930s WPA poster', v: 'vintage 1930s WPA Federal Art Project travel poster, screen print, flat color shapes, hard edges, simplified geometric forms, no photorealism', s: 250, raw: false },
-  { label: 'Historical photo', v: 'authentic historical color photograph, period accurate clothing and props, documentary realism, aged film surface', s: 100, raw: true },
-  { label: 'Android industrial', v: 'quiet android portrait in damp industrial machinery, soft eerie stillness, rusted mechanical backdrop, cinematic sci-fi realism', s: 220, raw: true },
-  { label: 'Clean environment', v: 'highly composed environment photograph, strong atmosphere, clear subject hierarchy, no clutter', s: 150, raw: true },
+const RECIPES=[
+  {label:'Cinematic portrait',v:'cinematic environmental portrait photography, single clear subject, grounded realism, emotionally charged frame',s:175,raw:true},
+  {label:'Noir portrait',v:'black and white noir street portrait, high contrast shadows, luminous highlights, single clear subject',s:125,raw:true},
+  {label:'Glitch editorial',v:'glitch art editorial portrait, controlled digital corruption, subtle RGB separation around the edges only, single clear subject, sharp face',s:175,raw:true,effect:'controlled glitch artifacts, subtle pixel distortion around the edges only, sharp face and clean subject'},
+  {label:'Graphic horror',v:'dark graphic horror artwork, bold ink linework, stark shapes, limited palette, dramatic shadow design',s:450,raw:false},
+  {label:'Noir manga',v:'noir manga illustration, expressive ink linework, cinematic close-up composition, clean grayscale shadow design',s:350,raw:false,effect:'bold ink hatching, scratchy line texture, hand-drawn marks'},
+  {label:'1970s crime still',v:'raw 1970s crime thriller film still, gritty urban realism, analog grain, period detail, cinematic composition',s:125,raw:true,effect:'visible film grain, soft halation, imperfect analog surface'},
+  {label:'1930s WPA poster',v:'vintage 1930s WPA Federal Art Project travel poster, screen print, flat color shapes, hard edges, simplified geometric forms, no photorealism',s:250,raw:false},
+  {label:'Historical color photo',v:'authentic historical color photograph, period accurate clothing and props, documentary realism, aged film surface',s:100,raw:true,effect:'aged film surface, subtle scratches, realistic period color'},
+  {label:'Android industrial',v:'quiet android portrait in damp industrial machinery, soft eerie stillness, rusted mechanical backdrop, cinematic sci-fi realism',s:220,raw:true},
+  {label:'Fashion editorial',v:'high fashion editorial photography, elegant composition, polished styling, dramatic atmosphere, premium magazine spread',s:250,raw:true},
+  {label:'Retro arcade horror',v:'retro arcade horror scene, glowing CRT screens, dense visual information, chiaroscuro darkness, single vivid accent',s:425,raw:false},
+  {label:'Clean environment',v:'highly composed environment photograph, strong atmosphere, clear subject hierarchy, no clutter',s:150,raw:true},
 ];
 
-const SUBJECTS = [
-  { label: 'No people', v: '' },
-  { label: 'Beautiful woman', v: 'a beautiful woman' },
-  { label: 'Lean athletic woman', v: 'a lean athletic woman' },
-  { label: 'Noir heroine', v: 'a mysterious noir heroine' },
-  { label: 'Fashion model', v: 'a high fashion editorial model' },
-  { label: 'Android girl', v: 'a quiet female android with humanlike features' },
-  { label: 'Two detectives', v: 'two hardened street detectives' },
-  { label: 'Custom', v: 'custom' },
+const SUBJECT_TYPES=[
+  {label:'No people',v:''},{label:'Woman',v:'a woman'},{label:'Man',v:'a man'},{label:'Girl',v:'a girl'},{label:'Boy',v:'a boy'},
+  {label:'Fashion model',v:'a high fashion editorial model'},{label:'Noir heroine',v:'a mysterious noir heroine'},
+  {label:'Android girl',v:'a quiet female android with humanlike features'},
+  {label:'Two detectives',v:'two hardened street detectives'},{label:'Small group',v:'a small group of people'},
+  {label:'Custom',v:'custom'}
 ];
 
-const LOOKS = [
-  { label: 'No specific look', v: '' },
-  { label: 'White European, blonde hair', v: 'White European, blonde wavy hair worn loose' },
-  { label: 'Scandinavian, blonde bob', v: 'Scandinavian, blonde shoulder-length bob hair' },
-  { label: 'East Asian, long black hair', v: 'East Asian, long straight black hair' },
-  { label: 'Latina, dark wavy hair', v: 'Latina, dark thick wavy hair' },
-  { label: 'Black, natural hair', v: 'Black, natural textured hair' },
-  { label: 'Custom look in details', v: '' },
+const AGE=[
+  {label:'No age',v:''},{label:'Teen',v:'in their late teens'},{label:'Early 20s',v:'in their early 20s'},{label:'Late 20s',v:'in their late 20s'},
+  {label:'30s',v:'in their 30s'},{label:'40s',v:'in their 40s'},{label:'50s',v:'in their 50s'},{label:'Elderly',v:'elderly'}
 ];
 
-const WARDROBE = [
-  { label: 'No specific clothing', v: '' },
-  { label: 'Black vintage outfit', v: 'wearing a black vintage outfit' },
-  { label: 'Luxury casual', v: 'wearing a luxury casual outfit' },
-  { label: 'High fashion editorial', v: 'wearing a high fashion editorial outfit' },
-  { label: '1970s period clothing', v: 'wearing authentic 1970s period clothing' },
-  { label: 'Futuristic black outfit', v: 'wearing a sleek black futuristic outfit' },
-  { label: 'Uniform', v: 'wearing a period accurate uniform' },
+const LOOKS=[
+  {label:'No specific look',v:''},{label:'White European',v:'White European'},{label:'Scandinavian',v:'Scandinavian'},
+  {label:'East Asian',v:'East Asian'},{label:'Southeast Asian',v:'Southeast Asian'},{label:'South Asian',v:'South Asian'},
+  {label:'Black',v:'Black'},{label:'Latina',v:'Latina'},{label:'Afro-Latina',v:'Afro-Latina'},
+  {label:'Middle Eastern',v:'Middle Eastern'},{label:'Native American',v:'Native American'},{label:'Mixed ethnicity',v:'mixed ethnicity'}
 ];
 
-const POSES = [
-  { label: 'Standing relaxed', v: 'standing relaxed, weight shifted to one side' },
-  { label: 'Facing camera', v: 'facing directly toward the camera' },
-  { label: 'Three-quarter turn', v: 'turned at a three-quarter angle to the camera' },
-  { label: 'Looking over shoulder', v: 'looking back over their shoulder' },
-  { label: 'Sitting still', v: 'sitting still with composed posture' },
-  { label: 'Walking casually', v: 'walking casually, natural stride' },
-  { label: 'Close-up face', v: 'tight close-up on the face' },
+const BUILD=[
+  {label:'No build',v:''},{label:'Very slim',v:'very slim'},{label:'Slim',v:'slim'},{label:'Lean athletic',v:'lean athletic'},
+  {label:'Average',v:'average build'},{label:'Curvy',v:'curvy'},{label:'Muscular',v:'muscular'},{label:'Tall and lean',v:'tall and lean'}
 ];
 
-const SETTINGS = [
-  { label: 'NYC brownstone street', v: 'on a New York City street with brownstones and urban grit' },
-  { label: 'Rainy alley', v: 'in a narrow rain-soaked alley with wet reflective pavement' },
-  { label: 'Retro arcade', v: 'inside a retro arcade filled with glowing CRT screens' },
-  { label: 'Industrial machinery', v: 'in front of rusted industrial machinery, cables, pipes, and damp metal' },
-  { label: '1970s Bronx street', v: 'on a gritty 1973 Bronx street corner beside a period accurate patrol car' },
-  { label: 'Small town 1930s street', v: 'on a small town main street in the 1930s with period accurate storefronts' },
-  { label: 'White sand dunes', v: 'in white gypsum sand dunes with sparse yucca plants and vast sky' },
-  { label: 'Luxury bar interior', v: 'inside a dim luxury bar with warm ambient light and cinematic shadows' },
-  { label: 'Custom', v: 'custom' },
+const HAIR_COLOR=[
+  {label:'No hair color',v:''},{label:'Black',v:'black'},{label:'Dark brown',v:'dark brown'},{label:'Brown',v:'medium brown'},
+  {label:'Auburn',v:'auburn'},{label:'Dirty blonde',v:'dirty blonde'},{label:'Blonde',v:'blonde'},{label:'Platinum',v:'platinum blonde'},
+  {label:'Silver',v:'silver'},{label:'Vivid red',v:'vivid red'},{label:'Blue',v:'electric blue'},{label:'Multicolor',v:'multicolor'}
 ];
 
-const LIGHTS = [
-  { label: 'Golden hour', v: 'golden hour light, warm orange-gold highlights, long dramatic shadows' },
-  { label: 'Blue hour', v: 'blue hour light, deep blue sky, city lights beginning to glow' },
-  { label: 'Noir contrast', v: 'dramatic noir lighting, deep blacks, hard shadows, luminous highlights' },
-  { label: 'Dim tungsten', v: 'dim warm tungsten interior light, soft pools of shadow' },
-  { label: 'Night neon', v: 'night neon lighting, colored reflections, wet surfaces' },
-  { label: 'Overcast soft', v: 'overcast soft light, muted shadows, subdued atmosphere' },
-  { label: 'Flat poster light', v: 'flat poster lighting, clean shapes, simplified light and shadow' },
+const HAIR_LENGTH=[
+  {label:'No length',v:''},{label:'Short',v:'short'},{label:'Shoulder length',v:'shoulder-length'},
+  {label:'Mid-back',v:'mid-back length'},{label:'Very long',v:'very long'},{label:'Waist length',v:'waist-length'}
 ];
 
-const MOODS = [
-  { label: 'Mysterious', v: 'mysterious and enigmatic mood' },
-  { label: 'Nostalgic', v: 'nostalgic and bittersweet atmosphere' },
-  { label: 'Gritty', v: 'gritty, tense, lived-in atmosphere' },
-  { label: 'Eerie', v: 'eerie stillness, something feels wrong just outside the frame' },
-  { label: 'Romantic', v: 'romantic cinematic atmosphere, intimate and warm' },
-  { label: 'Calm', v: 'calm, quiet, composed feeling' },
-  { label: 'Chaotic', v: 'controlled visual intensity, energetic but still readable' },
+const HAIR_TEXTURE=[
+  {label:'No texture',v:''},{label:'Straight',v:'straight'},{label:'Wavy',v:'wavy'},{label:'Loose curls',v:'loosely curled'},
+  {label:'Tight curls',v:'tightly curled'},{label:'Coily',v:'coily'}
 ];
 
-const EFFECTS = [
-  { label: 'No extra effect', v: '' },
-  { label: 'Subtle film grain', v: 'visible film grain, soft halation, imperfect analog surface' },
-  { label: 'Controlled glitch', v: 'controlled glitch artifacts, subtle pixel distortion around the edges only, sharp face and clean subject' },
-  { label: 'Ink hatching', v: 'bold ink hatching, scratchy line texture, hand-drawn marks' },
-  { label: 'Aged print', v: 'aged paper texture, faded ink, slight border wear' },
-  { label: 'Dense background detail', v: 'dense background detail, layered environment, subject remains clear' },
-  { label: 'Single red accent', v: 'black and grayscale palette with one vivid blood-red accent' },
-  { label: 'Gold tint', v: 'black and white with subtle warm gold tint' },
+const HAIR_STYLE=[
+  {label:'Down and loose',v:'worn loose and down'},{label:'Side swept',v:'side swept'},{label:'Covers one eye',v:'falling across one eye'},
+  {label:'Ponytail',v:'in a ponytail'},{label:'Slicked back',v:'slicked back'},{label:'Bob haircut',v:'in a modern bob haircut'},
+  {label:'Braids',v:'in braids'},{label:'Messy bun',v:'in a messy bun'}
 ];
 
-const RATIOS = ['9:16', '16:9', '4:5', '1:1', '3:2', '21:9'];
+const WARDROBE=[
+  {label:'No specific clothing',v:''},{label:'Black vintage outfit',v:'wearing a black vintage outfit'},
+  {label:'Luxury casual',v:'wearing a luxury casual outfit'},{label:'High fashion editorial',v:'wearing a high fashion editorial outfit'},
+  {label:'Streetwear',v:'wearing streetwear'},{label:'Vintage 1950s',v:'wearing a vintage 1950s outfit'},
+  {label:'1970s period clothing',v:'wearing authentic 1970s period clothing'},
+  {label:'1930s city clothing',v:'wearing modern city clothing from the 1930s'},
+  {label:'Futuristic black outfit',v:'wearing a sleek black futuristic outfit'},
+  {label:'Uniform',v:'wearing a period accurate uniform'},{label:'Elegant dress',v:'wearing an elegant dress'},
+  {label:'Graphic tee + pants',v:'wearing a relaxed graphic tee and loose pants'}
+];
 
-function pick(list, value) { return list.find(x => x.v === value) || null; }
-function joinClean(parts) { return parts.filter(x => x && String(x).trim()).join(', '); }
+const COLORS=[
+  {label:'No clothing color',v:''},{label:'Black',v:'black'},{label:'White',v:'white'},{label:'Teal',v:'teal'},
+  {label:'Blood red',v:'blood red'},{label:'Gold',v:'gold'},{label:'Cobalt blue',v:'cobalt blue'},
+  {label:'Cream',v:'cream'},{label:'Muted earth tones',v:'muted earth tone'},{label:'Rainbow ombre',v:'multicolor rainbow ombre'}
+];
 
-function App() {
-  const [recipe, setRecipe] = useState(RECIPES[0].v);
-  const [subject, setSubject] = useState(SUBJECTS[1].v);
-  const [customSubject, setCustomSubject] = useState('');
-  const [look, setLook] = useState('');
-  const [wardrobe, setWardrobe] = useState('');
-  const [pose, setPose] = useState(POSES[0].v);
-  const [setting, setSetting] = useState(SETTINGS[0].v);
-  const [customSetting, setCustomSetting] = useState('');
-  const [light, setLight] = useState(LIGHTS[0].v);
-  const [mood, setMood] = useState(MOODS[0].v);
-  const [effect, setEffect] = useState('');
-  const [details, setDetails] = useState('');
-  const [ratio, setRatio] = useState('9:16');
-  const [stylize, setStylize] = useState(175);
-  const [chaos, setChaos] = useState(3);
-  const [raw, setRaw] = useState(true);
-  const [noText, setNoText] = useState(true);
-  const [advanced, setAdvanced] = useState(false);
-  const [copied, setCopied] = useState(false);
+const POSES=[
+  {label:'Standing relaxed',v:'standing relaxed, weight shifted to one side'},
+  {label:'Facing camera',v:'facing directly toward the camera'},
+  {label:'Three-quarter turn',v:'turned at a three-quarter angle to the camera'},
+  {label:'Looking over shoulder',v:'looking back over their shoulder'},
+  {label:'Walking casually',v:'walking casually, natural stride'},
+  {label:'Sitting still',v:'sitting still with composed posture'},
+  {label:'Leaning on wall',v:'leaning naturally against a wall'},
+  {label:'Hands in pockets',v:'standing with hands in pockets'},
+  {label:'Close-up face',v:'tight close-up on the face'},
+  {label:'Holding wine glass',v:'holding a wine glass near the lips'},
+  {label:'Riding motorcycle',v:'sitting on a period appropriate motorcycle'},
+  {label:'Action stance',v:'caught in a natural action moment, still readable and composed'}
+];
 
-  const recipeObj = useMemo(() => pick(RECIPES, recipe), [recipe]);
+const SETTING_CATS={
+  City:[
+    {label:'NYC brownstone street',v:'on a New York City street with brownstones and urban grit'},
+    {label:'Rainy alley',v:'in a narrow rain-soaked alley with wet reflective pavement'},
+    {label:'Subway platform',v:'on a tiled subway platform under fluorescent lights'},
+    {label:'Rooftop skyline',v:'on a rooftop overlooking a dense city skyline'},
+    {label:'Steep city street',v:'on a steep city street sloping sharply downhill toward the bay'},
+    {label:'1970s Bronx street',v:'on a gritty 1973 Bronx street corner beside a period accurate patrol car'},
+    {label:'Small town 1930s street',v:'on a small town main street in the 1930s with period accurate storefronts'}
+  ],
+  Interiors:[
+    {label:'Retro arcade',v:'inside a retro arcade filled with glowing CRT screens'},
+    {label:'Luxury bar',v:'inside a dim luxury bar with warm ambient light and cinematic shadows'},
+    {label:'Bedroom',v:'inside a quiet bedroom with soft natural light'},
+    {label:'Grand library',v:'inside a grand library with towering shelves and dark wood'},
+    {label:'Café',v:'inside a quiet café with small tables and morning light'},
+    {label:'Industrial machinery',v:'in front of rusted industrial machinery, cables, pipes, and damp metal'}
+  ],
+  Nature:[
+    {label:'White sand dunes',v:'in white gypsum sand dunes with sparse yucca plants and vast sky'},
+    {label:'Forest path',v:'on a forest path with dappled light through the canopy'},
+    {label:'Waterfall after rain',v:'near a waterfall after rain, mist in the air and wet stone'},
+    {label:'Beach at sunset',v:'on a sandy beach at sunset with warm water and gentle waves'},
+    {label:'Snowfield',v:'in a vast open snowfield with distant mountains'},
+    {label:'Ocean cliffside',v:'on a clifftop edge above a dramatic ocean'}
+  ],
+  SciFiFantasy:[
+    {label:'Futuristic city',v:'in a colossal futuristic city with towering glass and steel spires'},
+    {label:'Cyberpunk street',v:'on a cyberpunk street drenched in neon rain and dense wiring'},
+    {label:'Alien landscape',v:'on an alien planet with strange vegetation and an unusual sky'},
+    {label:'Ancient ruins',v:'among ancient overgrown ruins reclaimed by nature'},
+    {label:'Underwater city',v:'inside an underwater city with glass domes and deep blue light'},
+    {label:'Floating islands',v:'among floating landmasses drifting high in the clouds'}
+  ],
+  Custom:[
+    {label:'Custom setting',v:'custom'}
+  ]
+};
 
-  function chooseRecipe(v) {
-    const r = pick(RECIPES, v);
+const LIGHTS=[
+  {label:'Golden hour',v:'golden hour light, warm orange-gold highlights, long dramatic shadows'},
+  {label:'Blue hour',v:'blue hour light, deep blue sky, city lights beginning to glow'},
+  {label:'Noir contrast',v:'dramatic noir lighting, deep blacks, hard shadows, luminous highlights'},
+  {label:'Dim tungsten',v:'dim warm tungsten interior light, soft pools of shadow'},
+  {label:'Night neon',v:'night neon lighting, colored reflections, wet surfaces'},
+  {label:'Overcast soft',v:'overcast soft light, muted shadows, subdued atmosphere'},
+  {label:'Moonlit darkness',v:'full darkness lit by artificial light or moonlight only'},
+  {label:'Harsh noon sun',v:'harsh overhead sunlight, hard short shadows'},
+  {label:'Flat poster light',v:'flat poster lighting, clean shapes, simplified light and shadow'}
+];
+
+const MOODS=[
+  {label:'Mysterious',v:'mysterious and enigmatic mood'},
+  {label:'Nostalgic',v:'nostalgic and bittersweet atmosphere'},
+  {label:'Gritty',v:'gritty, tense, lived-in atmosphere'},
+  {label:'Eerie',v:'eerie stillness, something feels wrong just outside the frame'},
+  {label:'Romantic',v:'romantic cinematic atmosphere, intimate and warm'},
+  {label:'Calm',v:'calm, quiet, composed feeling'},
+  {label:'Chaotic but readable',v:'controlled visual intensity, energetic but still readable'},
+  {label:'Melancholic',v:'melancholic and introspective atmosphere'},
+  {label:'Commanding',v:'commanding, severe, powerful presence'},
+  {label:'Joyful',v:'warm, joyful, alive, candid happiness'}
+];
+
+const PALETTES=[
+  {label:'No palette rule',v:''},{label:'Red + grayscale',v:'dominant blood red, black, and grayscale palette, one vivid red accent against darkness'},
+  {label:'Black & white',v:'pure black and white palette, strong tonal contrast, no color'},
+  {label:'B&W + gold tint',v:'black and white with subtle warm gold tint'},
+  {label:'Desaturated 1970s',v:'desaturated 1970s color palette, faded blues and browns, strong contrast'},
+  {label:'Golden amber',v:'warm orange-gold palette, glowing highlights, nostalgic warmth'},
+  {label:'Cold industrial',v:'cold green-gray industrial palette, muted rust, damp metal, low saturation'},
+  {label:'Cobalt poster',v:'deep cobalt blue, cream white, pale blue-gray shadows, flat poster colors'},
+  {label:'Neon cyan/amber',v:'cyan shadows and amber highlights, electric color separation, cinematic neon tension'}
+];
+
+const EFFECTS=[
+  {label:'No extra effect',v:''},{label:'Subtle film grain',v:'visible film grain, soft halation, imperfect analog surface'},
+  {label:'Controlled glitch',v:'controlled glitch artifacts, subtle pixel distortion around the edges only, sharp face and clean subject'},
+  {label:'Double exposure',v:'subtle double exposure layering, secondary image softly blended, main subject remains clear'},
+  {label:'Ink hatching',v:'bold ink hatching, scratchy line texture, hand-drawn marks'},
+  {label:'Aged print',v:'aged paper texture, faded ink, slight border wear'},
+  {label:'Dense background detail',v:'dense background detail, layered environment, subject remains clear'},
+  {label:'Chiaroscuro',v:'dramatic chiaroscuro, deep blacks, luminous highlights, sculpted shadow'},
+  {label:'CRT glow',v:'CRT screen glow, scanline texture, analog electronic atmosphere'},
+  {label:'Wet surfaces',v:'wet reflective surfaces, puddles, glistening pavement, atmospheric reflections'}
+];
+
+const CAMERA=[
+  {label:'Natural eye level',v:'eye level perspective, natural human viewpoint'},
+  {label:'Wide scene',v:'wide establishing shot showing the full scene'},
+  {label:'Close-up',v:'tight close-up, face and expression emphasized'},
+  {label:'Half body',v:'half-body portrait framing'},
+  {label:'Full body',v:'full body visible from head to toe, feet fully in frame'},
+  {label:'Low angle',v:'low angle shot, subject feels powerful'},
+  {label:'Symmetrical',v:'centered symmetrical composition'},
+  {label:'Dutch angle',v:'slightly dutch angle, subtle unease'},
+  {label:'Telephoto compression',v:'telephoto portrait compression, soft background separation'},
+  {label:'Documentary handheld',v:'documentary handheld feel, natural imperfect framing'}
+];
+
+const RATIOS=['9:16','16:9','4:5','1:1','3:2','21:9'];
+
+function pick(list,value){return list.find(x=>x.v===value)||null}
+function clean(parts){return parts.filter(x=>x&&String(x).trim()).join(', ')}
+
+function App(){
+  const [recipe,setRecipe]=useState(RECIPES[0].v);
+  const [subject,setSubject]=useState(SUBJECT_TYPES[1].v);
+  const [customSubject,setCustomSubject]=useState('');
+  const [age,setAge]=useState('');
+  const [look,setLook]=useState('');
+  const [build,setBuild]=useState('');
+  const [hairColor,setHairColor]=useState('');
+  const [hairLength,setHairLength]=useState('');
+  const [hairTexture,setHairTexture]=useState('');
+  const [hairStyle,setHairStyle]=useState(HAIR_STYLE[0].v);
+  const [wardrobe,setWardrobe]=useState('');
+  const [color,setColor]=useState('');
+  const [pose,setPose]=useState(POSES[0].v);
+  const [cat,setCat]=useState('City');
+  const [setting,setSetting]=useState(SETTING_CATS.City[0].v);
+  const [customSetting,setCustomSetting]=useState('');
+  const [light,setLight]=useState(LIGHTS[0].v);
+  const [mood,setMood]=useState(MOODS[0].v);
+  const [palette,setPalette]=useState('');
+  const [effect,setEffect]=useState('');
+  const [camera,setCamera]=useState(CAMERA[0].v);
+  const [details,setDetails]=useState('');
+  const [ratio,setRatio]=useState('9:16');
+  const [stylize,setStylize]=useState(175);
+  const [chaos,setChaos]=useState(3);
+  const [raw,setRaw]=useState(true);
+  const [noText,setNoText]=useState(true);
+  const [advanced,setAdvanced]=useState(false);
+  const [copied,setCopied]=useState(false);
+
+  const recipeObj=useMemo(()=>pick(RECIPES,recipe),[recipe]);
+
+  function chooseRecipe(v){
+    const r=pick(RECIPES,v);
     setRecipe(v);
-    if (r) {
-      setStylize(r.s);
-      setRaw(r.raw);
-      setChaos(v.includes('glitch') ? 5 : 3);
-      if (v.includes('poster')) {
-        setEffect('');
-        setNoText(true);
-      }
-      if (v.includes('glitch')) setEffect(EFFECTS[2].v);
-      if (v.includes('crime')) setEffect(EFFECTS[1].v);
-      if (v.includes('manga')) setEffect(EFFECTS[3].v);
+    if(r){
+      setStylize(r.s); setRaw(r.raw); setChaos(v.includes('glitch')?5:3);
+      if(r.effect) setEffect(r.effect);
+      if(v.includes('poster')) { setPalette(''); setEffect(''); setCamera(CAMERA[1].v); }
     }
   }
 
-  const subjectLine = useMemo(() => {
-    const base = subject === 'custom' ? customSubject : subject;
-    if (!base) return '';
-    return joinClean([base, look, wardrobe, pose]);
-  }, [subject, customSubject, look, wardrobe, pose]);
+  function changeCat(c){
+    setCat(c);
+    setSetting(SETTING_CATS[c][0].v);
+    setCustomSetting('');
+  }
 
-  const settingLine = setting === 'custom' ? customSetting : setting;
+  const hair=useMemo(()=>{
+    if(!hairColor&&!hairLength&&!hairTexture&&!hairStyle) return '';
+    return clean([hairColor,hairLength,hairTexture,'hair',hairStyle]).replace(', hair,', ' hair,');
+  },[hairColor,hairLength,hairTexture,hairStyle]);
 
-  const prompt = useMemo(() => {
-    const body = joinClean([
+  const subjectLine=useMemo(()=>{
+    const base=subject==='custom'?customSubject:subject;
+    if(!base) return '';
+    const wardrobeLine = clean([color, wardrobe]).replace(/^([^,]+), wearing/, 'wearing $1');
+    return clean([base, age, look, build, hair?`with ${hair}`:'', wardrobeLine, pose]);
+  },[subject,customSubject,age,look,build,hair,wardrobe,color,pose]);
+
+  const settingLine=setting==='custom'?customSetting:setting;
+
+  const prompt=useMemo(()=>{
+    const body=clean([
       recipeObj?.v,
       subjectLine,
       settingLine,
       light,
       mood,
+      palette,
       effect,
+      camera,
       details,
-      noText ? 'no visible text, no readable words, no logos, no watermarks' : ''
+      noText?'no visible text, no readable words, no logos, no watermarks':''
     ]);
-    if (!body) return '';
-    let params = ` --v 7 --ar ${ratio} --s ${stylize}`;
-    if (chaos > 0) params += ` --chaos ${chaos}`;
-    if (raw) params += ' --style raw';
-    return body + params;
-  }, [recipeObj, subjectLine, settingLine, light, mood, effect, details, noText, ratio, stylize, chaos, raw]);
+    if(!body) return '';
+    let params=` --v 7 --ar ${ratio} --s ${stylize}`;
+    if(chaos>0) params+=` --chaos ${chaos}`;
+    if(raw) params+=' --style raw';
+    return body+params;
+  },[recipeObj,subjectLine,settingLine,light,mood,palette,effect,camera,details,noText,ratio,stylize,chaos,raw]);
 
-  const promptScene = prompt ? prompt.replace(/\s--.*$/s, '') : '';
-  const promptParams = prompt ? (prompt.match(/\s(--.*)$/s)?.[1] || '') : '';
+  const promptScene=prompt?prompt.replace(/\s--.*$/s,''):'';
+  const promptParams=prompt?(prompt.match(/\s(--.*)$/s)?.[1]||''):'';
 
-  async function copy() {
-    if (!prompt) return;
-    try { await navigator.clipboard.writeText(prompt); } catch(e) {}
-    setCopied(true);
-    setTimeout(() => setCopied(false), 1800);
+  async function copy(){
+    if(!prompt) return;
+    try{await navigator.clipboard.writeText(prompt)}catch(e){}
+    setCopied(true); setTimeout(()=>setCopied(false),1800);
   }
 
-  function reset() {
-    setRecipe(RECIPES[0].v);
-    setSubject(SUBJECTS[1].v);
-    setCustomSubject('');
-    setLook('');
-    setWardrobe('');
-    setPose(POSES[0].v);
-    setSetting(SETTINGS[0].v);
-    setCustomSetting('');
-    setLight(LIGHTS[0].v);
-    setMood(MOODS[0].v);
-    setEffect('');
-    setDetails('');
-    setRatio('9:16');
-    setStylize(175);
-    setChaos(3);
-    setRaw(true);
-    setNoText(true);
+  function reset(){
+    setRecipe(RECIPES[0].v); setSubject(SUBJECT_TYPES[1].v); setCustomSubject('');
+    setAge(''); setLook(''); setBuild(''); setHairColor(''); setHairLength(''); setHairTexture(''); setHairStyle(HAIR_STYLE[0].v);
+    setWardrobe(''); setColor(''); setPose(POSES[0].v);
+    setCat('City'); setSetting(SETTING_CATS.City[0].v); setCustomSetting('');
+    setLight(LIGHTS[0].v); setMood(MOODS[0].v); setPalette(''); setEffect(''); setCamera(CAMERA[0].v); setDetails('');
+    setRatio('9:16'); setStylize(175); setChaos(3); setRaw(true); setNoText(true);
   }
 
   return <div className="app">
-    <div className="hdr">
-      <div className="logo">SceneForge Slim</div>
-      <div className="sub">Midjourney prompt builder, one clean spine</div>
-    </div>
+    <div className="hdr"><div className="hdr-row"><div><div className="logo">SceneForge Balanced</div><div className="sub">More options, fewer prompt collisions</div></div><button className="pill" onClick={reset}>Reset</button></div></div>
 
     <div className="sections">
       <div className="sec">
-        <div className="sec-head"><span className="num">01</span><span className="title">Recipe</span><div className="line" /></div>
-        <div className="hint">Pick one strong visual identity. This is the steering wheel.</div>
-        <div className="pills">{RECIPES.map(r => <button key={r.v} className={'pill ' + (recipe === r.v ? 'on' : '')} onClick={() => chooseRecipe(r.v)}>{r.label}</button>)}</div>
+        <div className="sec-head"><span className="num">01</span><span className="title">Recipe</span><div className="line"/></div>
+        <div className="hint">Pick one strong visual identity. This is the spine of the prompt.</div>
+        <div className="pills">{RECIPES.map(r=><button key={r.v} className={'pill '+(recipe===r.v?'on':'')} onClick={()=>chooseRecipe(r.v)}>{r.label}</button>)}</div>
         <div className="preview">{recipeObj?.v}</div>
       </div>
 
       <div className="sec">
-        <div className="sec-head"><span className="num">02</span><span className="title">Subject</span><div className="line" /></div>
-        <div className="grid2">
-          <div>
-            <div className="label">Subject</div>
-            <select value={subject} onChange={e => setSubject(e.target.value)}>
-              {SUBJECTS.map(x => <option key={x.label} value={x.v}>{x.label}</option>)}
-            </select>
-            {subject === 'custom' && <input style={{marginTop: '.45rem'}} type="text" value={customSubject} onChange={e => setCustomSubject(e.target.value)} placeholder="e.g. a 35-year-old Native American woman" />}
-          </div>
-          <div>
-            <div className="label">Look</div>
-            <select value={look} onChange={e => setLook(e.target.value)}>{LOOKS.map(x => <option key={x.label} value={x.v}>{x.label}</option>)}</select>
-          </div>
-          <div>
-            <div className="label">Wardrobe</div>
-            <select value={wardrobe} onChange={e => setWardrobe(e.target.value)}>{WARDROBE.map(x => <option key={x.label} value={x.v}>{x.label}</option>)}</select>
-          </div>
-          <div>
-            <div className="label">Pose</div>
-            <select value={pose} onChange={e => setPose(e.target.value)}>{POSES.map(x => <option key={x.label} value={x.v}>{x.label}</option>)}</select>
-          </div>
+        <div className="sec-head"><span className="num">02</span><span className="title">Subject</span><div className="line"/></div>
+        <div className="grid3">
+          <div><div className="label">Subject</div><select value={subject} onChange={e=>setSubject(e.target.value)}>{SUBJECT_TYPES.map(x=><option key={x.label} value={x.v}>{x.label}</option>)}</select>{subject==='custom'&&<input style={{marginTop:'.45rem'}} value={customSubject} onChange={e=>setCustomSubject(e.target.value)} placeholder="e.g. a 35-year-old Native American woman"/>}</div>
+          <div><div className="label">Age</div><select value={age} onChange={e=>setAge(e.target.value)}>{AGE.map(x=><option key={x.label} value={x.v}>{x.label}</option>)}</select></div>
+          <div><div className="label">Ethnicity / Look</div><select value={look} onChange={e=>setLook(e.target.value)}>{LOOKS.map(x=><option key={x.label} value={x.v}>{x.label}</option>)}</select></div>
+          <div><div className="label">Build</div><select value={build} onChange={e=>setBuild(e.target.value)}>{BUILD.map(x=><option key={x.label} value={x.v}>{x.label}</option>)}</select></div>
+          <div><div className="label">Pose</div><select value={pose} onChange={e=>setPose(e.target.value)}>{POSES.map(x=><option key={x.label} value={x.v}>{x.label}</option>)}</select></div>
+          <div><div className="label">Camera</div><select value={camera} onChange={e=>setCamera(e.target.value)}>{CAMERA.map(x=><option key={x.label} value={x.v}>{x.label}</option>)}</select></div>
         </div>
-        <div className="preview">{subjectLine || 'No subject selected'}</div>
+        <div className="splitline"/>
+        <div className="grid3">
+          <div><div className="label">Hair Color</div><select value={hairColor} onChange={e=>setHairColor(e.target.value)}>{HAIR_COLOR.map(x=><option key={x.label} value={x.v}>{x.label}</option>)}</select></div>
+          <div><div className="label">Hair Length</div><select value={hairLength} onChange={e=>setHairLength(e.target.value)}>{HAIR_LENGTH.map(x=><option key={x.label} value={x.v}>{x.label}</option>)}</select></div>
+          <div><div className="label">Hair Texture</div><select value={hairTexture} onChange={e=>setHairTexture(e.target.value)}>{HAIR_TEXTURE.map(x=><option key={x.label} value={x.v}>{x.label}</option>)}</select></div>
+          <div><div className="label">Hair Style</div><select value={hairStyle} onChange={e=>setHairStyle(e.target.value)}>{HAIR_STYLE.map(x=><option key={x.label} value={x.v}>{x.label}</option>)}</select></div>
+          <div><div className="label">Wardrobe</div><select value={wardrobe} onChange={e=>setWardrobe(e.target.value)}>{WARDROBE.map(x=><option key={x.label} value={x.v}>{x.label}</option>)}</select></div>
+          <div><div className="label">Wardrobe Color</div><select value={color} onChange={e=>setColor(e.target.value)}>{COLORS.map(x=><option key={x.label} value={x.v}>{x.label}</option>)}</select></div>
+        </div>
+        <div className="preview">{subjectLine||'No subject selected'}</div>
       </div>
 
       <div className="sec">
-        <div className="sec-head"><span className="num">03</span><span className="title">Place</span><div className="line" /></div>
-        <select value={setting} onChange={e => setSetting(e.target.value)}>{SETTINGS.map(x => <option key={x.label} value={x.v}>{x.label}</option>)}</select>
-        {setting === 'custom' && <input style={{marginTop: '.45rem'}} type="text" value={customSetting} onChange={e => setCustomSetting(e.target.value)} placeholder="e.g. inside a dim motel room with old floral wallpaper" />}
+        <div className="sec-head"><span className="num">03</span><span className="title">Place</span><div className="line"/></div>
+        <div className="pills">{Object.keys(SETTING_CATS).map(c=><button className={'pill '+(cat===c?'on':'')} onClick={()=>changeCat(c)} key={c}>{c}</button>)}</div>
+        <div className="label">Setting</div>
+        <select value={setting} onChange={e=>setSetting(e.target.value)}>{SETTING_CATS[cat].map(x=><option key={x.label} value={x.v}>{x.label}</option>)}</select>
+        {setting==='custom'&&<input style={{marginTop:'.45rem'}} value={customSetting} onChange={e=>setCustomSetting(e.target.value)} placeholder="e.g. inside a dim motel room with old floral wallpaper"/>}
       </div>
 
       <div className="sec">
-        <div className="sec-head"><span className="num">04</span><span className="title">Light</span><div className="line" /></div>
-        <div className="pills">{LIGHTS.map(x => <button key={x.v} className={'pill ' + (light === x.v ? 'on' : '')} onClick={() => setLight(x.v)}>{x.label}</button>)}</div>
+        <div className="sec-head"><span className="num">04</span><span className="title">Light</span><div className="line"/></div>
+        <div className="pills">{LIGHTS.map(x=><button key={x.v} className={'pill '+(light===x.v?'on':'')} onClick={()=>setLight(x.v)}>{x.label}</button>)}</div>
       </div>
 
       <div className="sec">
-        <div className="sec-head"><span className="num">05</span><span className="title">Mood</span><div className="line" /></div>
-        <div className="pills">{MOODS.map(x => <button key={x.v} className={'pill ' + (mood === x.v ? 'on' : '')} onClick={() => setMood(x.v)}>{x.label}</button>)}</div>
+        <div className="sec-head"><span className="num">05</span><span className="title">Mood</span><div className="line"/></div>
+        <div className="pills">{MOODS.map(x=><button key={x.v} className={'pill '+(mood===x.v?'on':'')} onClick={()=>setMood(x.v)}>{x.label}</button>)}</div>
       </div>
 
       <div className="sec">
-        <div className="sec-head"><span className="num">06</span><span className="title">One Effect</span><div className="line" /></div>
-        <div className="hint">Only one extra effect. This keeps Midjourney from turning into soup.</div>
-        <div className="pills">{EFFECTS.map(x => <button key={x.label} className={'pill ' + (effect === x.v ? 'on' : '')} onClick={() => setEffect(x.v)}>{x.label}</button>)}</div>
+        <div className="sec-head"><span className="num">06</span><span className="title">Palette + One Effect</span><div className="line"/></div>
+        <div className="hint">One palette rule and one effect max. That gives variety without prompt-soup.</div>
+        <div className="label">Palette</div>
+        <div className="pills">{PALETTES.map(x=><button key={x.label} className={'pill '+(palette===x.v?'on':'')} onClick={()=>setPalette(x.v)}>{x.label}</button>)}</div>
+        <div className="label">Effect</div>
+        <div className="pills">{EFFECTS.map(x=><button key={x.label} className={'pill '+(effect===x.v?'on':'')} onClick={()=>setEffect(x.v)}>{x.label}</button>)}</div>
       </div>
 
       <div className="sec">
-        <div className="sec-head"><span className="num">07</span><span className="title">Details</span><div className="line" /></div>
-        <textarea value={details} onChange={e => setDetails(e.target.value)} placeholder="Add one or two important details only, like: red lipstick, steam from a manhole, cracked pavement, distant neon reflection." />
+        <div className="sec-head"><span className="num">07</span><span className="title">Specific Details</span><div className="line"/></div>
+        <textarea value={details} onChange={e=>setDetails(e.target.value)} placeholder="Add only the details that matter: red lipstick, steam from a manhole, cracked pavement, distant neon reflection, old motorcycle, skull posters, no crowd, etc."/>
       </div>
 
       <div className="sec">
-        <div className="sec-head"><span className="num">08</span><span className="title">Output</span><div className="line" /></div>
+        <div className="sec-head"><span className="num">08</span><span className="title">Output</span><div className="line"/></div>
         <div className="label">Aspect Ratio</div>
-        <div className="pills">{RATIOS.map(r => <button key={r} className={'pill ' + (ratio === r ? 'on' : '')} onClick={() => setRatio(r)}>{r}</button>)}</div>
-        <div className="slider">
-          <div className="row"><div className="label">Stylize</div><span className="slider-val">{stylize}</span></div>
-          <input type="range" min="50" max="700" value={stylize} onChange={e => setStylize(parseInt(e.target.value))} />
-          <div className="small">Lower is literal. Higher lets Midjourney decorate the room.</div>
-        </div>
-        <div className="toggle-row">
-          <button className={'pill ' + (advanced ? 'on' : '')} onClick={() => setAdvanced(!advanced)}>Advanced</button>
-          <button className={'pill ' + (raw ? 'on' : '')} onClick={() => setRaw(!raw)}>Style Raw</button>
-          <button className={'pill ' + (noText ? 'on' : '')} onClick={() => setNoText(!noText)}>No Text / Logos</button>
-          <button className="pill" onClick={reset}>Reset</button>
-        </div>
-        {advanced && <div className="slider">
-          <div className="row"><div className="label">Chaos</div><span className="slider-val">{chaos}</span></div>
-          <input type="range" min="0" max="40" value={chaos} onChange={e => setChaos(parseInt(e.target.value))} />
-          <div className="small">Keep this low for portraits. 0 to 8 is usually the clean zone.</div>
-        </div>}
+        <div className="pills">{RATIOS.map(r=><button key={r} className={'pill '+(ratio===r?'on':'')} onClick={()=>setRatio(r)}>{r}</button>)}</div>
+        <div className="slider"><div className="row"><div className="label">Stylize</div><span className="slider-val">{stylize}</span></div><input type="range" min="50" max="750" value={stylize} onChange={e=>setStylize(parseInt(e.target.value))}/><div className="small">Lower is literal. Higher lets Midjourney decorate the room.</div></div>
+        <div className="toggle-row"><button className={'pill '+(advanced?'on':'')} onClick={()=>setAdvanced(!advanced)}>Advanced</button><button className={'pill '+(raw?'on':'')} onClick={()=>setRaw(!raw)}>Style Raw</button><button className={'pill '+(noText?'on':'')} onClick={()=>setNoText(!noText)}>No Text / Logos</button></div>
+        {advanced&&<div className="slider"><div className="row"><div className="label">Chaos</div><span className="slider-val">{chaos}</span></div><input type="range" min="0" max="40" value={chaos} onChange={e=>setChaos(parseInt(e.target.value))}/><div className="small">Keep this low for portraits. 0 to 8 is usually the clean zone.</div></div>}
       </div>
     </div>
 
-    <div className="bar">
-      <div className="bar-inner">
-        <div className="bar-lbl">Generated Prompt</div>
-        <div className="out">{prompt ? <><span>{promptScene}</span><span className="params"> {promptParams}</span></> : 'Build a prompt above.'}</div>
-        <button className={'copy ' + (copied ? 'ok' : '')} disabled={!prompt} onClick={copy}>{copied ? 'Copied' : 'Copy Prompt'}</button>
-      </div>
-    </div>
-  </div>;
+    <div className="bar"><div className="bar-inner"><div className="bar-lbl">Generated Prompt</div><div className="out">{prompt?<><span>{promptScene}</span><span className="params"> {promptParams}</span></>:'Build a prompt above.'}</div><button className={'copy '+(copied?'ok':'')} disabled={!prompt} onClick={copy}>{copied?'Copied':'Copy Prompt'}</button></div></div>
+  </div>
 }
 
-ReactDOM.createRoot(document.getElementById('root')).render(<App />);
-  </script>
+ReactDOM.createRoot(document.getElementById('root')).render(<App/>);
+</script>
 </body>
 </html>
